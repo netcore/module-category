@@ -1,8 +1,8 @@
 <?php
 
 Route::group([
-    'prefix'     => 'admin/category',
-    'as'         => 'admin::category.',
+    'prefix'     => 'admin',
+    'as'         => 'category::',
     'middleware' => ['web', 'auth.admin'],
     'namespace'  => 'Modules\Category\Http\Controllers\Admin'
 ], function() {
