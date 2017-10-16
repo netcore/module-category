@@ -2,71 +2,119 @@
 
 namespace Modules\Category\Http\Controllers\Admin;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
+use Netcore\Translator\Helpers\TransHelper;
+use Modules\Category\Models\Category;
+use Modules\Category\Http\Requests\CategoryRequest;
 
 class CategoryController extends Controller
 {
     /**
      * Display a listing of the resource.
-     * @return Response
+     *
+     * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse|\Illuminate\Support\Collection
      */
     public function index()
     {
-        return view('category::index');
+        if (request()->wantsJson()) {
+            return $this->getCategoriesTreeJson();
+        }
+
+        $languages = TransHelper::getAllLanguages();
+
+        return view('category::index', compact('languages'));
     }
 
     /**
-     * Show the form for creating a new resource.
-     * @return Response
+     * Store category
+     *
+     * @param CategoryRequest $request
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function create()
+    public function store(CategoryRequest $request)
     {
-        return view('category::create');
+        $category = Category::create(
+            $request->only('icon')
+        );
+
+        $category->storeTranslations(
+            $request->input('translations')
+        );
+
+        if ($request->has('parent') && $parent = Category::find($request->input('parent'))) {
+            $parent->appendNode($category);
+        }
+
+        return response()->json([
+            'state' => 'success',
+        ]);
     }
 
     /**
-     * Store a newly created resource in storage.
-     * @param  Request $request
-     * @return Response
+     * Update category
+     *
+     * @param CategoryRequest $request
+     * @param Category $category
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function store(Request $request)
+    public function update(CategoryRequest $request, Category $category)
     {
+        $category->update([
+            'icon' => $request->input('icon'),
+        ]);
+
+        $category->updateTranslations(
+            $request->input('translations')
+        );
+
+        return response()->json([
+            'state' => 'success',
+        ]);
     }
 
     /**
-     * Show the specified resource.
-     * @return Response
+     * Delete category and it's descendants
+     *
+     * @param Category $category
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function show()
+    public function destroy(Category $category)
     {
-        return view('category::show');
+        $categories = Category::descendantsAndSelf($category->id);
+
+        foreach ($categories as $item) {
+            $item->delete();
+        };
+
+        return response()->json([
+            'state' => 'success'
+        ]);
     }
 
     /**
-     * Show the form for editing the specified resource.
-     * @return Response
+     * Get data for JsTree
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function edit()
+    private function getCategoriesTreeJson()
     {
-        return view('category::edit');
-    }
+        $categories = Category::get()->map(function (Category $category) {
+            return [
+                'id'           => $category->id,
+                'parent'       => $category->parent_id ?: '#',
+                'text'         => trans_model($category, TransHelper::getLanguage(), 'name'),
+                'icon'         => 'fa fa-folder-o',
+                'li_attr'      => [],
+                'a_attr'       => [],
+                'translations' => $category->translations,
+                'state'        => [
+                    'opened'   => true,
+                    'disabled' => false,
+                    'selected' => false,
+                ],
+            ];
+        });
 
-    /**
-     * Update the specified resource in storage.
-     * @param  Request $request
-     * @return Response
-     */
-    public function update(Request $request)
-    {
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     * @return Response
-     */
-    public function destroy()
-    {
+        return $categories;
     }
 }

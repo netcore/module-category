@@ -12,10 +12,9 @@
   "dependencies": {
     "axios": "^0.16.2",
     "cross-env": "^5.0.1",
-    "exec": "^0.2.1",
     "jstree": "^3.3.4",
     "laravel-mix": "^1.0",
     "lodash": "^4.17.4",
-    "node-exec": "^0.1.1"
+    "vue-jstree": "^1.0.3"
   }
 }
