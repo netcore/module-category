@@ -14,7 +14,6 @@
     "cross-env": "^5.0.1",
     "jstree": "^3.3.4",
     "laravel-mix": "^1.0",
-    "lodash": "^4.17.4",
-    "vue-jstree": "^1.0.3"
+    "lodash": "^4.17.4"
   }
 }
