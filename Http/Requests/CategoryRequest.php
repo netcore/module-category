@@ -2,8 +2,9 @@
 
 namespace Modules\Category\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Netcore\Translator\Helpers\TransHelper;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CategoryRequest extends FormRequest
 {
@@ -24,18 +25,26 @@ class CategoryRequest extends FormRequest
      */
     public function rules()
     {
+        $languages = TransHelper::getAllLanguages();
+        $category = $this->route('category');
+
         $rules = [];
-        $model = $this->route('category');
 
-        foreach (TransHelper::getAllLanguages() as $language) {
-            $transModel = null;
+        foreach ($languages as $language) {
 
-            if ($model) {
-                $transModel = $model->translations()->where('locale', $language->iso_code)->first();
+            $translationInstance = null;
+            $iso = $language->iso_code;
+
+            if ($category) {
+                $translationInstance = $category->translations()->where('locale', $language->iso_code)->first();
             }
 
-            $rules['translations.' . $language->iso_code . '.name'] = 'required|min:3';
-            $rules['translations.' . $language->iso_code . '.slug'] = 'nullable|unique:netcore_category__category_translations,slug' . ($transModel ? ',' . $transModel->id : '');
+            // Name
+            $rules["translations.{$iso}.name"] = 'required|min:3';
+
+            // Slug
+            $rules["translations.{$iso}.slug"][] = 'nullable';
+            $rules["translations.{$iso}.slug"][] = Rule::unique('netcore_category__category_translations', 'slug')->ignore(object_get($translationInstance, 'id'));
         }
 
         return $rules;
@@ -48,21 +57,42 @@ class CategoryRequest extends FormRequest
      */
     public function messages()
     {
-        $messages = [];
-        $languages = TransHelper::getAllLanguages();
+        return [
+            'translations.*.name.required' => 'Category name :attribute is required.',
+            'translations.*.name.min' => 'Category name :attribute should be at least 3 chars.',
+            'translations.*.slug.unique' => 'Category slug :attribute should be unique.'
+        ];
+    }
 
-        foreach (TransHelper::getAllLanguages() as $language) {
-            if (count($languages) == 1) {
-                $messages['translations.' . $language->iso_code . '.name.required'] = 'Category name is required.';
-                $messages['translations.' . $language->iso_code . '.name.min'] = 'Category name should contain at least 3 chars.';
-                $messages['translations.' . $language->iso_code . '.slug.unique'] = 'Category slug should be unique.';
-            } else {
-                $messages['translations.' . $language->iso_code . '.name.required'] = 'Category name for language "' . $language->title . '" is required.';
-                $messages['translations.' . $language->iso_code . '.name.min'] = 'Category name for language "' . $language->title . '" should contain at least 3 chars.';
-                $messages['translations.' . $language->iso_code . '.slug.unique'] = 'Category slug for language "' . $language->title . '" should be unique.';
+    /**
+     * Get the validation message attributes
+     *
+     * @return array
+     */
+    public function attributes()
+    {
+        $languages = TransHelper::getAllLanguages();
+        $translatedAttributes = ['name', 'slug'];
+
+        $placeholder = 'for language ":lang"';
+
+        if ($languages->count() == 1) {
+            $language = $languages->first();
+
+            return [
+                "translations.{$language->iso_code}.name" => '',
+                "translations.{$language->iso_code}.slug" => '',
+            ];
+        }
+
+        $attributes = [];
+
+        foreach ($translatedAttributes as $translatedAttribute) {
+            foreach ($languages as $language) {
+                $attributes["translations.{$language->iso_code}.{$translatedAttribute}"] = str_replace(':lang', $language->title_localized, $placeholder);
             }
         }
 
-        return $messages;
+        return $attributes;
     }
 }

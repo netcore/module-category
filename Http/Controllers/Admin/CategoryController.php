@@ -2,6 +2,7 @@
 
 namespace Modules\Category\Http\Controllers\Admin;
 
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Netcore\Translator\Helpers\TransHelper;
 use Modules\Category\Models\Category;
@@ -92,13 +93,30 @@ class CategoryController extends Controller
     }
 
     /**
+     * Rebuild categories tree
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateOrder(Request $request)
+    {
+        Category::rebuildTree(
+            $request->all()
+        );
+
+        return response()->json([
+            'state' => 'success'
+        ]);
+    }
+
+    /**
      * Get data for JsTree
      *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     private function getCategoriesTreeJson()
     {
-        $categories = Category::get()->map(function (Category $category) {
+        $categories = Category::defaultOrder()->get()->map(function (Category $category) {
             return [
                 'id'           => $category->id,
                 'parent'       => $category->parent_id ?: '#',

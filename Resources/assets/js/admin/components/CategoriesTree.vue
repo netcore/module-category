@@ -4,8 +4,6 @@
 
 <script>
     export default {
-        props: ['route'],
-
         data() {
             return {};
         },
@@ -27,6 +25,18 @@
                 self.$parent.$emit('jsTree.nodeSelected', data.node);
             });
 
+            // Category order changed
+            ref.on('move_node.jstree', (event, data) => {
+                let treeJson = ref.jstree(true).get_json('#', {
+                    no_state: true,
+                    no_data: true,
+                    no_li_attr: true,
+                    no_a_attr: true
+                });
+
+                self.$parent.$emit('jsTree.orderChanged', self.buildTreeDataForNestedSet(treeJson));
+            });
+
             // Deselect current selection
             self.$parent.$on('jsTree.deselectAllNodes', () => {
                 ref.jstree('deselect_all', true);
@@ -42,6 +52,25 @@
                 ref.jstree(true).settings.core.data = categories;
                 ref.jstree(true).refresh();
             });
+        },
+
+        methods: {
+            buildTreeDataForNestedSet(treeJson) {
+                let self = this;
+                let data = [];
+
+                _.each(treeJson, category => {
+                    let cat = { id: category.id };
+
+                    if(category.children && category.children.length) {
+                        cat.children = self.buildTreeDataForNestedSet(category.children);
+                    }
+
+                    data.push(cat);
+                });
+
+                return data;
+            }
         }
     }
 </script>

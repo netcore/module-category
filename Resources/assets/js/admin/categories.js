@@ -64,6 +64,13 @@ new Vue({
             self.categoryForm = __mockForm(selectedNode);
             self.categoryFormAction = 'edit';
         });
+
+        this.$on('jsTree.orderChanged', treeJson => {
+            axios.post(window.categoryModule.routes.order, treeJson).catch(err => {
+                $.growl.error({ message: 'Unable to save order - server error!' });
+                console.log(err.response);
+            });
+        });
     },
 
     methods: {

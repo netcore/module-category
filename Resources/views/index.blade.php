@@ -9,8 +9,9 @@
         window.categoryModule = {
             languages: {!! $languages->toJson() !!},
             routes: {
-                index: '{{ route('category::categories.index') }}',
-                update: '{{ route('category::categories.update', '--ID--') }}'
+                index:  '{{ route('category::categories.index') }}',
+                update: '{{ route('category::categories.update', '--ID--') }}',
+                order:  '{{ route('category::categories.order') }}'
             }
         };
     </script>
@@ -34,7 +35,7 @@
         <div class="panel-body">
             <div class="row">
                 <div class="col-md-6">
-                    <categories-tree route="{{ route('category::categories.index') }}"></categories-tree>
+                    <categories-tree></categories-tree>
                 </div>
 
                 <div class="col-md-6" id="categoryForm">
