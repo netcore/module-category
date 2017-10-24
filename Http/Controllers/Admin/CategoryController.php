@@ -4,6 +4,8 @@ namespace Modules\Category\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Modules\Category\Icons\IconSet;
+use Modules\Category\Icons\IconSetInterface;
 use Netcore\Translator\Helpers\TransHelper;
 use Modules\Category\Models\Category;
 use Modules\Category\Http\Requests\CategoryRequest;
@@ -22,8 +24,9 @@ class CategoryController extends Controller
         }
 
         $languages = TransHelper::getAllLanguages();
+        $iconsEnabled = config('category.icons.enabled', false);
 
-        return view('category::index', compact('languages'));
+        return view('category::index', compact('languages', 'iconsEnabled'));
     }
 
     /**
@@ -88,7 +91,7 @@ class CategoryController extends Controller
         };
 
         return response()->json([
-            'state' => 'success'
+            'state' => 'success',
         ]);
     }
 
@@ -105,7 +108,7 @@ class CategoryController extends Controller
         );
 
         return response()->json([
-            'state' => 'success'
+            'state' => 'success',
         ]);
     }
 
@@ -121,7 +124,7 @@ class CategoryController extends Controller
                 'id'           => $category->id,
                 'parent'       => $category->parent_id ?: '#',
                 'text'         => trans_model($category, TransHelper::getLanguage(), 'name'),
-                'icon'         => 'fa fa-folder-o',
+                'icon'         => $category->icon,
                 'li_attr'      => [],
                 'a_attr'       => [],
                 'translations' => $category->translations,

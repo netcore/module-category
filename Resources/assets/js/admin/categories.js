@@ -187,6 +187,7 @@ new Vue({
     },
 
     components: {
-        'categories-tree': require('./components/CategoriesTree.vue')
+        'categories-tree': require('./components/CategoriesTree.vue'),
+        'icon-select': require('./components/IconSelect.vue')
     }
 });

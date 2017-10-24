@@ -49,7 +49,14 @@
 
             // Reload tree
             self.$parent.$on('jsTree.categoriesLoaded', categories => {
-                ref.jstree(true).settings.core.data = categories;
+                let data = JSON.parse(JSON.stringify(categories)); // To plain object
+
+                data = _.map(data, category => {
+                    category.icon = 'fa fa-folder';
+                    return category;
+                });
+
+                ref.jstree(true).settings.core.data = data;
                 ref.jstree(true).refresh();
             });
         },

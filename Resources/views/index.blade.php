@@ -1,6 +1,19 @@
 @extends('admin::layouts.master')
 
 @section('styles')
+    @if($iconsEnabled)
+        @foreach(app('CategoryIconSet')->getInjectableStyles() as $style)
+            <link rel="stylesheet" href="{{ $style }}">
+        @endforeach
+    @endif
+
+    <style type="text/css">
+        .select2-container svg {
+            width: 15px;
+            height: 15px;
+            margin-right: 10px;
+        }
+    </style>
     <link rel="stylesheet" href="{{ asset('assets/category/admin/css/jstree-themes/default/style.min.css') }}">
 @endsection
 
@@ -14,6 +27,10 @@
                 order:  '{{ route('category::categories.order') }}'
             }
         };
+
+        @if($iconsEnabled)
+            window.categoryModule.icons = {!! json_encode(app('CategoryIconSet')->getIcons()) !!};
+        @endif
     </script>
 
     <script src="{{ asset('assets/category/admin/js/jstree.js') }}"></script>
@@ -21,7 +38,6 @@
 @endsection
 
 @section('content')
-
     <div class="page-header">
         <h1>
             <span>
@@ -29,6 +45,13 @@
             </span>
         </h1>
     </div>
+
+    {{-- Icon Sprite --}}
+    @if($iconsEnabled)
+        <div style="display: none !important;">
+            {!! app('CategoryIconSet')->getInjectableSprite() !!}
+        </div>
+    @endif
 
     <div class="panel" id="categoryApp">
         <div class="panel-heading">Categories list</div>
@@ -38,7 +61,7 @@
                     <categories-tree></categories-tree>
                 </div>
 
-                <div class="col-md-6" id="categoryForm">
+                <div class="col-md-6">
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <span class="panel-title">@{{ categoryFormAction === 'edit' ? 'Edit' : 'Create' }} category</span>
@@ -72,7 +95,7 @@
                                     <input type="text" class="form-control" v-model="selectedNodeName" disabled id="selectedNodeName">
                                     <div class="input-group-btn">
                                         <button class="btn btn-danger" @click="selectedNode = null">
-                                        <i class="fa fa-times"></i> Create as root
+                                            <i class="fa fa-times"></i> Create as root
                                         </button>
                                     </div>
                                 </div>
@@ -92,10 +115,17 @@
                                 </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="icon">Icon:</label>
-                                <select id="icon" class="form-control" v-model="categoryForm.icon"></select>
-                            </div>
+                            @if($iconsEnabled)
+                                {{-- Select2 render template --}}
+                                <div id="icon-render-template" style="display: none !important;">
+                                    {!! app('CategoryIconSet')->getSelect2Template() !!}
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="icon">Icon:</label>
+                                    <icon-select id="icon" :icon="categoryForm.icon"></icon-select>
+                                </div>
+                            @endif
                         </div>
 
                         <div class="panel-footer text-right">

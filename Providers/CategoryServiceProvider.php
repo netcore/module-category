@@ -26,6 +26,16 @@ class CategoryServiceProvider extends ServiceProvider
         $this->registerViews();
         $this->registerFactories();
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
+
+        $this->app->singleton('CategoryIconSet', function() {
+            $class = config('category.icons.presenter');
+
+            if (! class_exists($class)) {
+                throw new \Exception('Icon presenter is not found!');
+            }
+
+            return new $class;
+        });
     }
 
     /**
@@ -46,8 +56,9 @@ class CategoryServiceProvider extends ServiceProvider
     protected function registerConfig()
     {
         $this->publishes([
-            __DIR__.'/../Config/config.php' => config_path('category.php'),
+            __DIR__.'/../Config/config.php' => config_path('netcore/module-category.php'),
         ], 'config');
+
         $this->mergeConfigFrom(
             __DIR__.'/../Config/config.php', 'category'
         );

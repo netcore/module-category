@@ -67,9 +67,7 @@ class CategoriesTableSeeder extends Seeder
      */
     private function createCategory(array $categoryData, $parentCategory = null)
     {
-        $category = Category::create([
-            'icon' => 'fa fa-asterisk',
-        ]);
+        $category = Category::create([]);
 
         // Store translations
         foreach (TransHelper::getAllLanguages() as $language) {

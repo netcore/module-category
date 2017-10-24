@@ -946,7 +946,8 @@ new Vue({
     },
 
     components: {
-        'categories-tree': __webpack_require__(32)
+        'categories-tree': __webpack_require__(32),
+        'icon-select': __webpack_require__(36)
     }
 });
 
@@ -19360,7 +19361,14 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
         // Reload tree
         self.$parent.$on('jsTree.categoriesLoaded', function (categories) {
-            ref.jstree(true).settings.core.data = categories;
+            var data = JSON.parse(JSON.stringify(categories)); // To plain object
+
+            data = _.map(data, function (category) {
+                category.icon = 'fa fa-folder';
+                return category;
+            });
+
+            ref.jstree(true).settings.core.data = data;
             ref.jstree(true).refresh();
         });
     },
@@ -19403,6 +19411,139 @@ if (false) {
   module.hot.accept()
   if (module.hot.data) {
      require("vue-hot-reload-api").rerender("data-v-930d6abe", module.exports)
+  }
+}
+
+/***/ }),
+/* 36 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var disposed = false
+var normalizeComponent = __webpack_require__(33)
+/* script */
+var __vue_script__ = __webpack_require__(37)
+/* template */
+var __vue_template__ = __webpack_require__(38)
+/* styles */
+var __vue_styles__ = null
+/* scopeId */
+var __vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var __vue_module_identifier__ = null
+var Component = normalizeComponent(
+  __vue_script__,
+  __vue_template__,
+  __vue_styles__,
+  __vue_scopeId__,
+  __vue_module_identifier__
+)
+Component.options.__file = "Resources/assets/js/admin/components/IconSelect.vue"
+if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key.substr(0, 2) !== "__"})) {console.error("named exports are not supported in *.vue files.")}
+if (Component.options.functional) {console.error("[vue-loader] IconSelect.vue: functional components are not supported with templates, they should use render functions.")}
+
+/* hot reload */
+if (false) {(function () {
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), false)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-4ae238c8", Component.options)
+  } else {
+    hotAPI.reload("data-v-4ae238c8", Component.options)
+  }
+  module.hot.dispose(function (data) {
+    disposed = true
+  })
+})()}
+
+module.exports = Component.exports
+
+
+/***/ }),
+/* 37 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+//
+//
+//
+//
+//
+//
+//
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+    props: ['id', 'icon'],
+
+    data: function data() {
+        return {
+            options: {},
+            icons: window.categoryModule.icons
+        };
+    },
+    mounted: function mounted() {
+        var iconTemplate = $('#icon-render-template').html();
+
+        var formatOutput = function formatOutput(icon) {
+            if (!icon.id || !icon.id.length) {
+                return 'No icon';
+            }
+
+            return $(iconTemplate.replace(/::text::/g, icon.text).replace(/::id::/g, icon.id));
+        };
+
+        this.options.templateResult = formatOutput;
+        this.options.templateSelection = formatOutput;
+
+        this.options.escapeMarkup = function (m) {
+            return m;
+        };
+
+        var parent = this.$parent;
+
+        $(this.$el).select2(this.options).on('select2:select', function (data) {
+            parent.categoryForm.icon = data.params.data.id;
+        });
+    },
+
+
+    watch: {
+        icon: function icon(value) {
+            $(this.$el).val(value).trigger('change');
+        }
+    }
+});
+
+/***/ }),
+/* 38 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c(
+    "select",
+    { attrs: { id: _vm.id, title: "Icon" } },
+    [
+      _c("option", { attrs: { value: "" } }, [_vm._v("No icon")]),
+      _vm._v(" "),
+      _vm._l(_vm.icons, function(icon, id) {
+        return _c("option", { domProps: { value: id } }, [_vm._v(_vm._s(icon))])
+      })
+    ],
+    2
+  )
+}
+var staticRenderFns = []
+render._withStripped = true
+module.exports = { render: render, staticRenderFns: staticRenderFns }
+if (false) {
+  module.hot.accept()
+  if (module.hot.data) {
+     require("vue-hot-reload-api").rerender("data-v-4ae238c8", module.exports)
   }
 }
 
