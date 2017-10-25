@@ -3,7 +3,7 @@
     "description": "Module for category management",
     "homepage": "http://netcore.lv",
     "type": "module",
-    "licence": "MIT",
+    "license": "MIT",
     "authors": [
         {
             "name": "Viktors Ņikiforovs",
