@@ -73,8 +73,7 @@ class CategoriesTableSeeder extends Seeder
         foreach (TransHelper::getAllLanguages() as $language) {
             $category->translations()->create([
                 'locale' => $language->iso_code,
-                'name'   => $categoryData['name'],
-                'slug'   => str_slug($categoryData['name']),
+                'name'   => $categoryData['name']
             ]);
         }
 

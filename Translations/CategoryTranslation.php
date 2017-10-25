@@ -3,10 +3,14 @@
 namespace Modules\Category\Translations;
 
 use Illuminate\Database\Eloquent\Model;
+use Cviebrock\EloquentSluggable\Sluggable;
+use Cviebrock\EloquentSluggable\SluggableScopeHelpers;
 use Modules\Category\Models\Category;
 
 class CategoryTranslation extends Model
 {
+    use Sluggable, SluggableScopeHelpers;
+
     /**
      * Table name
      *
@@ -31,6 +35,20 @@ class CategoryTranslation extends Model
      * @var bool
      */
     public $timestamps = true;
+
+    /**
+     * Return the sluggable configuration for this model
+     *
+     * @return array
+     */
+    public function sluggable(): array
+    {
+        return [
+            'slug' => [
+                'source' => 'name'
+            ]
+        ];
+    }
 
     /** --------------- Relations --------------- */
 

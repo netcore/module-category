@@ -1,11 +1,11 @@
 {
     "name": "netcore/module-category",
-    "description": "",
+    "description": "Module for category management",
     "type": "module",
     "authors": [
         {
-            "name": "Jānis Blaus",
-            "email": "janis@netcore.lv"
+            "name": "Viktors Ņikiforovs",
+            "email": "viktors.nikiforovs@netcore.lv"
         }
     ],
     "autoload": {
@@ -14,8 +14,9 @@
         }
     },
     "require": {
-        "php": ">=5.6.4",
-        "kalnoy/nestedset": "^4.2"
+        "php": "^7.0",
+        "kalnoy/nestedset": "^4.2",
+        "cviebrock/eloquent-sluggable": "^4.3"
     },
     "minimum-stability": "dev"
 }
