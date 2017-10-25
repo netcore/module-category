@@ -1,7 +1,9 @@
 {
     "name": "netcore/module-category",
     "description": "Module for category management",
+    "homepage": "http://netcore.lv",
     "type": "module",
+    "licence": "MIT",
     "authors": [
         {
             "name": "Viktors Ņikiforovs",
@@ -14,7 +16,7 @@
         }
     },
     "require": {
-        "php": "^7.0",
+        "php": ">=7.0",
         "kalnoy/nestedset": "^4.2",
         "cviebrock/eloquent-sluggable": "^4.3"
     },
