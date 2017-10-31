@@ -12,7 +12,7 @@
         data() {
             return {
                 options: {},
-                icons: window.categoryModule.icons
+                icons: window.categoryModule.icons.set
             };
         },
 
@@ -20,10 +20,10 @@
             const iconTemplate = $('#icon-render-template').html();
 
             const formatOutput = (icon) => {
-                if (! icon.id || ! icon.id.length) {
+                if (!icon.id || !icon.id.length) {
                     return 'No icon';
                 }
-                
+
                 return $(iconTemplate.replace(/::text::/g, icon.text).replace(/::id::/g, icon.id));
             };
 
@@ -37,10 +37,15 @@
             let parent = this.$parent;
 
             $(this.$el)
+                .val(this.icon)
                 .select2(this.options)
                 .on('select2:select', (data) => {
                     parent.categoryForm.icon = data.params.data.id;
                 });
+        },
+        
+        beforeDestroy() {
+            $(this.$el).select2('destroy');
         },
 
         watch: {

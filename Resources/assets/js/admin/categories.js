@@ -3,13 +3,13 @@
 import _ from 'lodash';
 import axios from 'axios';
 
-const __mockForm = function(category) {
+const __mockForm = function (category) {
     let output = {
         icon: _.get(category, 'icon', ''),
         translations: {}
     };
 
-    if(category && category.id) {
+    if (category && category.id) {
         output.id = category.id;
     }
 
@@ -47,11 +47,33 @@ new Vue({
 
         showSelectedParentCategory() {
             return this.selectedNode && this.categoryFormAction === 'create';
+        },
+
+        showIconSelect() {
+            const isEnabled = window.categoryModule.icons.enabled;
+            const rootOnly = window.categoryModule.icons.rootOnly;
+            const action = this.categoryFormAction;
+
+            if (!isEnabled) {
+                return false;
+            }
+
+            // Create as root form
+            if(rootOnly && action === 'create' && this.selectedNode) {
+                return false;
+            }
+
+            // Root edit
+            if (rootOnly && action === 'edit' && this.selectedNode.parent !== '#') {
+                return false;
+            }
+
+            return true;
         }
     },
 
     created() {
-        this.languages  = _.keyBy(window.categoryModule.languages, 'iso_code');
+        this.languages = _.keyBy(window.categoryModule.languages, 'iso_code');
         this.__categoryApp__loadCategories();
 
         let self = this;
@@ -67,7 +89,7 @@ new Vue({
 
         this.$on('jsTree.orderChanged', treeJson => {
             axios.post(window.categoryModule.routes.order, treeJson).catch(err => {
-                $.growl.error({ message: 'Unable to save order - server error!' });
+                $.growl.error({message: 'Unable to save order - server error!'});
                 console.log(err.response);
             });
         });
@@ -112,7 +134,7 @@ new Vue({
 
             let route, method;
 
-            if(this.categoryFormAction === 'edit') {
+            if (this.categoryFormAction === 'edit') {
                 route = window.categoryModule.routes.update.replace('--ID--', this.selectedNode.id);
                 method = 'PUT';
             } else {
@@ -120,24 +142,24 @@ new Vue({
                 method = 'POST';
             }
 
-            let data = _.merge({ _method: method }, this.categoryForm);
+            let data = _.merge({_method: method}, this.categoryForm);
             let self = this;
 
             if (this.selectedNode) {
-                data = _.merge(data, { parent : this.selectedNode.id });
+                data = _.merge(data, {parent: this.selectedNode.id});
             }
 
             axios
                 .post(route, data)
                 .then(res => {
-                    $.growl.success({ message: 'Category saved!' });
+                    $.growl.success({message: 'Category saved!'});
                     self.__categoryApp__loadCategories();
                     button.button('reset');
                 })
 
                 .catch(err => {
-                    if(err.response.status !== 422) {
-                        $.growl.error({ message: 'Unknown server error!' });
+                    if (err.response.status !== 422) {
+                        $.growl.error({message: 'Unknown server error!'});
                     } else {
                         let errors = err.response.data.errors;
                         let error = errors[Object.keys(errors)[0]];
@@ -146,7 +168,7 @@ new Vue({
                             error = error[0];
                         }
 
-                        $.growl.error({ message: error });
+                        $.growl.error({message: error});
                     }
 
                     button.button('reset');
@@ -163,10 +185,10 @@ new Vue({
                 showCancelButton: true,
                 confirmButtonColor: "#DD6B55",
                 confirmButtonText: "Delete!"
-            }).then(function() {
+            }).then(function () {
                 let route = window.categoryModule.routes.update.replace('--ID--', self.selectedNode.id);
 
-                $.post(route, { _method: 'DELETE' }).done(() => {
+                $.post(route, {_method: 'DELETE'}).done(() => {
                     self.__categoryApp__loadCategories();
 
                     // Reset form
@@ -182,7 +204,8 @@ new Vue({
                         swal("Whoops..", "Unable to delete category - server error!", "error");
                     }, 300);
                 });
-            }).catch(() => {});
+            }).catch(() => {
+            });
         },
     },
 

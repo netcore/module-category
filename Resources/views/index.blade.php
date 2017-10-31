@@ -1,7 +1,7 @@
 @extends('admin::layouts.master')
 
 @section('styles')
-    @if($iconsEnabled)
+    @if(array_get($jsVars->get('icons'), 'enabled'))
         @foreach(app('CategoryIconSet')->getInjectableStyles() as $style)
             <link rel="stylesheet" href="{{ $style }}">
         @endforeach
@@ -19,18 +19,7 @@
 
 @section('scripts')
     <script type="text/javascript">
-        window.categoryModule = {
-            languages: {!! $languages->toJson() !!},
-            routes: {
-                index:  '{{ route('category::categories.index') }}',
-                update: '{{ route('category::categories.update', '--ID--') }}',
-                order:  '{{ route('category::categories.order') }}'
-            }
-        };
-
-        @if($iconsEnabled)
-            window.categoryModule.icons = {!! json_encode(app('CategoryIconSet')->getIcons()) !!};
-        @endif
+        window.categoryModule = {!! $jsVars->toJson() !!};
     </script>
 
     <script src="{{ asset('assets/category/admin/js/jstree.js') }}"></script>
@@ -47,7 +36,7 @@
     </div>
 
     {{-- Icon Sprite --}}
-    @if($iconsEnabled)
+    @if(array_get($jsVars->get('icons'), 'enabled'))
         <div style="display: none !important;">
             {!! app('CategoryIconSet')->getInjectableSprite() !!}
         </div>
@@ -57,24 +46,29 @@
         <div class="panel-heading">Categories list</div>
         <div class="panel-body">
             <div class="row">
+
                 <div class="col-md-6">
                     <categories-tree></categories-tree>
                 </div>
 
                 <div class="col-md-6">
                     <div class="panel panel-default">
+
                         <div class="panel-heading">
-                            <span class="panel-title">@{{ categoryFormAction === 'edit' ? 'Edit' : 'Create' }} category</span>
+                            <span class="panel-title">
+                                @{{ categoryFormAction === 'edit' ? 'Edit' : 'Create' }} category
+                            </span>
+
                             <div class="panel-heading-controls" v-if="categoryFormAction === 'edit'">
-                                <button class="btn btn-xs btn-success" @click="__categoryApp__addChildToCategory">
+                                <button class="btn btn-xs btn-success" v-on:click="__categoryApp__addChildToCategory">
                                     <i class="fa fa-plus-circle"></i> Add child
                                 </button>
 
-                                <button class="btn btn-xs btn-warning" @click="__categoryApp__cancelCategoryEditing">
+                                <button class="btn btn-xs btn-warning" v-on:click="__categoryApp__cancelCategoryEditing">
                                     <i class="fa fa-times-circle"></i> Cancel editing
                                 </button>
 
-                                <button class="btn btn-xs btn-danger" @click="__categoryApp__deleteCategory">
+                                <button class="btn btn-xs btn-danger" v-on:click="__categoryApp__deleteCategory">
                                     <i class="fa fa-trash"></i> Delete category
                                 </button>
                             </div>
@@ -89,18 +83,20 @@
                                 </ul>
                             </template>
 
+                            {{-- Parent category --}}
                             <div class="form-group" v-if="showSelectedParentCategory">
                                 <label for="selectedNodeName">Parent category:</label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" v-model="selectedNodeName" disabled id="selectedNodeName">
                                     <div class="input-group-btn">
-                                        <button class="btn btn-danger" @click="selectedNode = null">
+                                        <button class="btn btn-danger" v-on:click="selectedNode = null">
                                             <i class="fa fa-times"></i> Create as root
                                         </button>
                                     </div>
                                 </div>
                             </div>
 
+                            {{-- Translatable tabs --}}
                             <div class="tab-content">
                                 <div v-for="(language, iso) in languages" :id="'translations-' + iso" class="tab-pane fade in active">
                                     <div class="form-group">
@@ -115,13 +111,13 @@
                                 </div>
                             </div>
 
-                            @if($iconsEnabled)
+                            @if(array_get($jsVars->get('icons'), 'enabled'))
                                 {{-- Select2 render template --}}
                                 <div id="icon-render-template" style="display: none !important;">
                                     {!! app('CategoryIconSet')->getSelect2Template() !!}
                                 </div>
 
-                                <div class="form-group">
+                                <div class="form-group" v-if="showIconSelect">
                                     <label for="icon">Icon:</label>
                                     <icon-select id="icon" :icon="categoryForm.icon"></icon-select>
                                 </div>
@@ -129,15 +125,20 @@
                         </div>
 
                         <div class="panel-footer text-right">
-                            <button type="button" @click="__categoryApp__saveCategory($event)" class="btn btn-success">
-                                <span v-if="categoryFormAction === 'edit'"><i class="fa fa-save"></i> Save</span>
-                                <span v-else><i class="fa fa-plus-circle"></i> Create</span>
+                            <button type="button" v-on:click="__categoryApp__saveCategory($event)" class="btn btn-success">
+                                <span v-if="categoryFormAction === 'edit'">
+                                    <i class="fa fa-save"></i> Save
+                                </span>
+
+                                <span v-else>
+                                    <i class="fa fa-plus-circle"></i> Create
+                                </span>
                             </button>
                         </div>
+
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 @stop

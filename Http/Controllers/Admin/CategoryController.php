@@ -23,10 +23,26 @@ class CategoryController extends Controller
             return $this->getCategoriesTreeJson();
         }
 
-        $languages = TransHelper::getAllLanguages();
-        $iconsEnabled = config('category.icons.enabled', false);
+        $icons = [
+            'enabled'  => config('category.icons.enabled', false),
+            'rootOnly' => config('category.icons.rootOnly', true),
+        ];
 
-        return view('category::index', compact('languages', 'iconsEnabled'));
+        if ($icons['enabled']) {
+            $icons['set'] = app('CategoryIconSet')->getIcons();
+        }
+
+        $jsVars = collect([
+            'icons'     => $icons,
+            'languages' => TransHelper::getAllLanguages(),
+            'routes'    => [
+                'index'  => route('category::categories.index'),
+                'update' => route('category::categories.update', '--ID--'),
+                'order'  => route('category::categories.order'),
+            ],
+        ]);
+
+        return view('category::index', compact('jsVars'));
     }
 
     /**
