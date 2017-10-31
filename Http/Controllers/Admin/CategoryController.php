@@ -23,12 +23,13 @@ class CategoryController extends Controller
         }
 
         $icons = [
-            'enabled'  => config('category.icons.enabled', false),
-            'rootOnly' => config('category.icons.rootOnly', true),
+            'enabled'  => config('netcore.module-category.icons.enabled', false),
+            'rootOnly' => config('netcore.module-category.icons.rootOnly', true),
         ];
 
         if ($icons['enabled']) {
             $icons['set'] = app('CategoryIconSet')->getIcons();
+            $icons['template'] = app('CategoryIconSet')->getSelect2Template();
         }
 
         $jsVars = collect([

@@ -17,7 +17,7 @@
         },
 
         mounted() {
-            const iconTemplate = $('#icon-render-template').html();
+            const iconTemplate = window.categoryModule.icons.template;
 
             const formatOutput = (icon) => {
                 if (!icon.id || !icon.id.length) {

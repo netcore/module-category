@@ -116,11 +116,6 @@
                             </div>
 
                             @if(array_get($jsVars->get('icons'), 'enabled'))
-                                {{-- Select2 render template --}}
-                                <div id="icon-render-template" style="display: none !important;">
-                                    {!! app('CategoryIconSet')->getSelect2Template() !!}
-                                </div>
-
                                 <div class="form-group" v-if="showIconSelect">
                                     <label for="icon">Icon:</label>
                                     <icon-select id="icon" :icon="categoryForm.icon"></icon-select>
