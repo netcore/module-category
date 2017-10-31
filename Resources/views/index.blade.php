@@ -77,7 +77,7 @@
                         <div class="panel-body">
                             <template v-if="_.size(languages) > 1">
                                 <ul class="nav nav-tabs">
-                                    <li v-for="(language, iso) in languages">
+                                    <li v-for="(language, iso) in languages" :class="{ 'active' : ! Object.keys(languages).indexOf(iso) }">
                                         <a data-toggle="tab" :href="'#translations-' + iso">@{{ language.title }}</a>
                                     </li>
                                 </ul>
@@ -98,7 +98,11 @@
 
                             {{-- Translatable tabs --}}
                             <div class="tab-content">
-                                <div v-for="(language, iso) in languages" :id="'translations-' + iso" class="tab-pane fade in active">
+                                <div v-for="(language, iso) in languages"
+                                     class="tab-pane fade"
+                                     :id="'translations-' + iso"
+                                     :class="{ 'in active' : ! Object.keys(languages).indexOf(iso) }"
+                                >
                                     <div class="form-group">
                                         <label :for="'name-' + iso">Category name: <span class="color-red">*</span></label>
                                         <input type="text" :id="'name-' + iso" class="form-control" v-model="categoryForm.translations[iso].name">

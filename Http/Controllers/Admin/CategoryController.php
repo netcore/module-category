@@ -5,7 +5,6 @@ namespace Modules\Category\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\Category\Icons\IconSet;
-use Modules\Category\Icons\IconSetInterface;
 use Netcore\Translator\Helpers\TransHelper;
 use Modules\Category\Models\Category;
 use Modules\Category\Http\Requests\CategoryRequest;
