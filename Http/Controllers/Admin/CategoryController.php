@@ -146,7 +146,9 @@ class CategoryController extends Controller
      */
     private function getCategoriesTreeJson()
     {
-        $categories = Category::defaultOrder()->get()->map(function (Category $category) {
+        $isTreeOpened = config('netcore.module-category.tree.opened_by_default', false);
+
+        $categories = Category::defaultOrder()->get()->map(function (Category $category) use ($isTreeOpened) {
             return [
                 'id'           => $category->id,
                 'parent'       => $category->parent_id ?: '#',
@@ -156,7 +158,7 @@ class CategoryController extends Controller
                 'a_attr'       => [],
                 'translations' => $category->translations,
                 'state'        => [
-                    'opened'   => true,
+                    'opened'   => $isTreeOpened,
                     'disabled' => false,
                     'selected' => false,
                 ],

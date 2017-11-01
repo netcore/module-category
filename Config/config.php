@@ -24,4 +24,14 @@ return [
      * Set to false to disable cache clearing after creating/editing/reordering categories.
      */
     'cache_tag' => 'categories',
+
+    /**
+     * JsTree config
+     */
+    'tree'      => [
+        /**
+         * Are all nodes opened by default?
+         */
+        'opened_by_default' => false,
+    ],
 ];
