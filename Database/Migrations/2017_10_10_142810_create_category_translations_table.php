@@ -36,5 +36,7 @@ class CreateCategoryTranslationsTable extends Migration
     public function down()
     {
         Schema::dropIfExists('netcore_category__category_translations');
+        Schema::dropIfExists('netcore_category__categories');
+
     }
 }
