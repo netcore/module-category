@@ -33,6 +33,6 @@ class CreateCategoriesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('netcore_category__categories');
+        // It is dropped in "netcore_category__category_translations" migration
     }
 }
