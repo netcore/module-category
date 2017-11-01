@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'icons' => [
+    'icons'     => [
         /**
          * Enable/disable category icons
          */
@@ -10,11 +10,18 @@ return [
         /**
          * Only root categories have icons?
          */
-        'rootOnly' => true,
+        'root_only' => true,
 
         /**
          * Select2 icon presenter/formatter
          */
         'presenter' => \Modules\Category\Icons\FontAwesomeIconSet::class,
     ],
+
+    /**
+     * Cache tag name.
+     *
+     * Set to false to disable cache clearing after creating/editing/reordering categories.
+     */
+    'cache_tag' => 'categories',
 ];

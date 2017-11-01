@@ -918,7 +918,7 @@ new Vue({
         },
         showIconSelect: function showIconSelect() {
             var isEnabled = window.categoryModule.icons.enabled;
-            var rootOnly = window.categoryModule.icons.rootOnly;
+            var rootOnly = window.categoryModule.icons.root_only;
             var action = this.categoryFormAction;
 
             if (!isEnabled) {

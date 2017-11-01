@@ -2,12 +2,15 @@
 
 namespace Modules\Category\Http\Controllers\Admin;
 
+use Illuminate\Cache\RedisStore;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+
 use Modules\Category\Icons\IconSet;
-use Netcore\Translator\Helpers\TransHelper;
 use Modules\Category\Models\Category;
 use Modules\Category\Http\Requests\CategoryRequest;
+
+use Netcore\Translator\Helpers\TransHelper;
 
 class CategoryController extends Controller
 {
@@ -23,8 +26,8 @@ class CategoryController extends Controller
         }
 
         $icons = [
-            'enabled'  => config('netcore.module-category.icons.enabled', false),
-            'rootOnly' => config('netcore.module-category.icons.rootOnly', true),
+            'enabled'   => config('netcore.module-category.icons.enabled', false),
+            'root_only' => config('netcore.module-category.icons.rootOnly', true),
         ];
 
         if ($icons['enabled']) {
@@ -65,6 +68,8 @@ class CategoryController extends Controller
             $parent->appendNode($category);
         }
 
+        $this->clearCache();
+
         return response()->json([
             'state' => 'success',
         ]);
@@ -87,6 +92,8 @@ class CategoryController extends Controller
             $request->input('translations')
         );
 
+        $this->clearCache();
+
         return response()->json([
             'state' => 'success',
         ]);
@@ -106,6 +113,8 @@ class CategoryController extends Controller
             $item->delete();
         };
 
+        $this->clearCache();
+
         return response()->json([
             'state' => 'success',
         ]);
@@ -122,6 +131,8 @@ class CategoryController extends Controller
         Category::rebuildTree(
             $request->all()
         );
+
+        $this->clearCache();
 
         return response()->json([
             'state' => 'success',
@@ -153,5 +164,20 @@ class CategoryController extends Controller
         });
 
         return $categories;
+    }
+
+    /**
+     * Clear cache by tag
+     *
+     * @return void
+     */
+    private function clearCache() : void
+    {
+        $cacheTag = config('netcore.module-category.cache_tag');
+        $isRedis = cache()->getStore() instanceof RedisStore;
+
+        if ($cacheTag && $isRedis) {
+            cache()->tags([$cacheTag])->flush();
+        }
     }
 }
