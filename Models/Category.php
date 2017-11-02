@@ -43,6 +43,7 @@ class Category extends Model
      */
     public $translatedAttributes = [
         'name',
+        'full_slug',
         'slug',
     ];
 
@@ -60,4 +61,19 @@ class Category extends Model
      */
     protected $with = ['translations'];
 
+    /** --------------- Accessors --------------- */
+
+    public function getChainedNameAttribute() : string
+    {
+        $categories = static::with('ancestors')->ancestorsAndSelf($this->id);
+        $name = '';
+
+        foreach ($categories as $category) {
+            $name .= $category->name . ' -> ';
+        }
+
+        $name = substr($name, 0, -3); // Remove last arrow
+
+        return $name;
+    }
 }
