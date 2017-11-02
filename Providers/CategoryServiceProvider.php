@@ -3,6 +3,8 @@
 namespace Modules\Category\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Modules\Category\Observers\CategoryTranslationObserver;
+use Modules\Category\Translations\CategoryTranslation;
 
 class CategoryServiceProvider extends ServiceProvider
 {
@@ -23,6 +25,7 @@ class CategoryServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->registerTranslations();
         $this->registerViews();
+        $this->registerObservers();
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
 
         $this->app->singleton('CategoryIconSet', function() {
@@ -96,6 +99,14 @@ class CategoryServiceProvider extends ServiceProvider
         } else {
             $this->loadTranslationsFrom(__DIR__ .'/../Resources/lang', 'category');
         }
+    }
+
+    /**
+     * Register model observers
+     */
+    private function registerObservers()
+    {
+        CategoryTranslation::observe(CategoryTranslationObserver::class);
     }
 
     /**

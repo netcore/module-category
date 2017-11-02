@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 use Modules\Category\Icons\IconSet;
+use Modules\Category\Jobs\RegenerateCategoryFullSlugs;
 use Modules\Category\Models\Category;
 use Modules\Category\Http\Requests\CategoryRequest;
 
@@ -133,6 +134,8 @@ class CategoryController extends Controller
         );
 
         $this->clearCache();
+
+        dispatch(new RegenerateCategoryFullSlugs);
 
         return response()->json([
             'state' => 'success',

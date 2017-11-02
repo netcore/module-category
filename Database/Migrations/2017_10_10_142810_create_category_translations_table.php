@@ -21,6 +21,7 @@ class CreateCategoryTranslationsTable extends Migration
 
             $table->string('name');
             $table->string('slug')->index()->unique();
+            $table->string('full_slug')->nullable()->index();
 
             $table->timestamps();
             $table->unique(['category_id', 'locale'], 'category_locale_unique');
