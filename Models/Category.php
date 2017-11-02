@@ -63,7 +63,7 @@ class Category extends Model
 
     /** --------------- Accessors --------------- */
 
-    public function getChainedNameAttribute() : string
+    public function getChainedNameAttribute(): string
     {
         $categories = static::with('ancestors')->ancestorsAndSelf($this->id);
         $name = '';
@@ -75,5 +75,22 @@ class Category extends Model
         $name = substr($name, 0, -3); // Remove last arrow
 
         return $name;
+    }
+
+    /**
+     * Get breadcrumb links
+     *
+     * @return array
+     */
+    public function getBreadcrumbLinksAttribute(): array
+    {
+        $categories = static::with('ancestors')->ancestorsAndSelf($this->id);
+        $breadcrumbs = [];
+
+        foreach ($categories as $category) {
+            $breadcrumbs[url($category->full_slug)] = $category->name;
+        }
+
+        return $breadcrumbs;
     }
 }
