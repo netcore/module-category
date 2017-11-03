@@ -7,6 +7,7 @@ use Dimsav\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Category\Translations\CategoryTranslation;
+use Modules\Classified\Models\Parameter;
 use Modules\Content\Traits\SyncTranslations;
 
 class Category extends Model
@@ -61,6 +62,18 @@ class Category extends Model
      */
     protected $with = ['translations'];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany|\Illuminate\Support\Collection
+     */
+    public function parameters()
+    {
+        if (config('netcore.module-classified.parameters.attach_to_categories')) {
+            return $this->belongsToMany(Parameter::class, 'netcore_classified__category_parameter');
+        }
+
+        return collect([]);
+    }
+
     /** --------------- Accessors --------------- */
 
     public function getChainedNameAttribute(): string
@@ -93,4 +106,5 @@ class Category extends Model
 
         return $breadcrumbs;
     }
+
 }
