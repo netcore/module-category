@@ -1,6 +1,12 @@
 ## Module for managing site categories
 This module was made for easy management of categories.
 
+## Features
+
+- Everything is translatable
+- Each category has slug, manual slugs are allowed
+- Drag'n'drop support for reordering
+
 ## Pre-installation
 
 This module is part of Netcore CMS ecosystem and is only functional in a project that has following packages installed:
