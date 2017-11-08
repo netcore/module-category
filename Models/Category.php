@@ -28,6 +28,7 @@ class Category extends Model
      */
     protected $fillable = [
         'icon',
+        'classified_count'
     ];
 
     /**
