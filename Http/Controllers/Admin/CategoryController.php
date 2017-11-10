@@ -183,6 +183,8 @@ class CategoryController extends Controller
 
         if ($cacheTag && $isRedis) {
             cache()->tags([$cacheTag])->flush();
+        }  else {
+            cache()->flush();
         }
     }
 }
