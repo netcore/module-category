@@ -27,6 +27,8 @@
 @endsection
 
 @section('content')
+    {!! Breadcrumbs::render('admin.categories') !!}
+
     <div class="page-header">
         <h1>
             <span>
