@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Category\Translations\CategoryTranslation;
 use Modules\Classified\Models\Parameter;
-use Modules\Content\Traits\SyncTranslations;
+use Modules\Admin\Traits\SyncTranslations;
 
 class Category extends Model
 {
