@@ -2,6 +2,7 @@
 
 namespace Modules\Category\Models;
 
+use App\Models\Classified;
 use Kalnoy\Nestedset\NodeTrait;
 use Dimsav\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,7 @@ use Modules\Admin\Traits\SyncTranslations;
 
 class Category extends Model
 {
+
     use NodeTrait, SoftDeletes, Translatable, SyncTranslations;
 
     /**
@@ -75,6 +77,34 @@ class Category extends Model
         return collect([]);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function classifieds()
+    {
+        if (config('netcore.module-classified.parameters.attach_to_categories')) {
+            return $this->hasMany(Classified::class, 'category_2')
+                ->active()
+                ->where('language_iso_code', app()->getLocale());
+        }
+
+        return collect([]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function child_classifieds()
+    {
+        if (config('netcore.module-classified.parameters.attach_to_categories')) {
+            return $this->hasMany(Classified::class, 'category_3')
+                ->active()
+                ->where('language_iso_code', app()->getLocale());
+        }
+
+        return collect([]);
+    }
+
     /** --------------- Accessors --------------- */
 
     public function getChainedNameAttribute(): string
@@ -83,7 +113,7 @@ class Category extends Model
         $name = '';
 
         foreach ($categories as $category) {
-            $name .= $category->name . ' -> ';
+            $name .= $category->name . ' > ';
         }
 
         $name = substr($name, 0, -3); // Remove last arrow
