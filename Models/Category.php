@@ -77,13 +77,19 @@ class Category extends Model
 
     /** --------------- Accessors --------------- */
 
+    /**
+     * Get chained category name
+     * Note: To use this, you should eager load ancestors - ::with('ancestors')->...
+     *
+     * @return string
+     */
     public function getChainedNameAttribute(): string
     {
-        $categories = static::with('ancestors')->ancestorsAndSelf($this->id);
+        $categories = $this->breadcrumbLinks;
         $name = '';
 
-        foreach ($categories as $category) {
-            $name .= $category->name . ' -> ';
+        foreach ($categories as $url => $categoryName) {
+            $name .= $categoryName . ' -> ';
         }
 
         $name = substr($name, 0, -3); // Remove last arrow
@@ -93,17 +99,19 @@ class Category extends Model
 
     /**
      * Get breadcrumb links
+     * To use this, you should eager load ancestors - ::with('ancestors')->...
      *
      * @return array
      */
     public function getBreadcrumbLinksAttribute(): array
     {
-        $categories = static::with('ancestors')->ancestorsAndSelf($this->id);
         $breadcrumbs = [];
 
-        foreach ($categories as $category) {
-            $breadcrumbs[url($category->full_slug)] = $category->name;
+        foreach ($this->ancestors as $ancestor) {
+            $breadcrumbs[url($ancestor->full_slug)] = $ancestor->name;
         }
+
+        $breadcrumbs[url($this->full_slug)] = $this->name;
 
         return $breadcrumbs;
     }
