@@ -44,7 +44,7 @@
         </div>
     @endif
 
-    <div class="panel" id="categoryApp">
+    <div class="panel" id="categoryApp" v-cloak>
         <div class="panel-heading">Categories list</div>
         <div class="panel-body">
             <div class="row">
@@ -54,7 +54,7 @@
                 </div>
 
                 <div class="col-md-6">
-                    <div class="panel panel-default">
+                    <div class="panel panel-default v-cloak--hidden">
 
                         <div class="panel-heading">
                             <span class="panel-title">
