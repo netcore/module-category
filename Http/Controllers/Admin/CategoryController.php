@@ -150,12 +150,19 @@ class CategoryController extends Controller
     private function getCategoriesTreeJson()
     {
         $isTreeOpened = config('netcore.module-category.tree.opened_by_default', false);
+        $suffixHelper = config('netcore.module-category.tree.name_suffix_helper_function', null);
 
-        $categories = Category::defaultOrder()->get()->map(function (Category $category) use ($isTreeOpened) {
+        $categories = Category::defaultOrder()->get()->map(function (Category $category) use ($isTreeOpened, $suffixHelper) {
+            $categoryName = trans_model($category, TransHelper::getLanguage(), 'name');
+
+            if ($suffixHelper && function_exists($suffixHelper)) {
+                $categoryName .= $suffixHelper($category);
+            }
+
             return [
                 'id'           => $category->id,
                 'parent'       => $category->parent_id ?: '#',
-                'text'         => trans_model($category, TransHelper::getLanguage(), 'name'),
+                'text'         => $categoryName,
                 'icon'         => $category->icon,
                 'li_attr'      => [],
                 'a_attr'       => [],
