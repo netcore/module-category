@@ -199,6 +199,8 @@ new Vue({
 
                         $.growl.error({message: error});
                     }
+
+                    self.__categoryApp__unblockPanel();
                 });
         },
 
@@ -231,6 +233,8 @@ new Vue({
                     setTimeout(() => {
                         swal('Whoops..', 'Unable to delete category - server error!', 'error');
                     }, 300);
+
+                    self.__categoryApp__unblockPanel();
                 });
             });
         },
