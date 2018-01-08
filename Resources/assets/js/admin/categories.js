@@ -1,8 +1,20 @@
 'use strict';
 
+/**
+ * --------------------------------------------------------------------------------------------
+ * Dependencies
+ * --------------------------------------------------------------------------------------------
+ */
 import _ from 'lodash';
 import axios from 'axios';
 
+require('block-ui');
+
+/**
+ * --------------------------------------------------------------------------------------------
+ * Helpers
+ * --------------------------------------------------------------------------------------------
+ */
 const __mockForm = function (category) {
     let output = {
         icon: _.get(category, 'icon', ''),
@@ -28,6 +40,11 @@ const __mockForm = function (category) {
     return output;
 };
 
+/**
+ * --------------------------------------------------------------------------------------------
+ * Vue App
+ * --------------------------------------------------------------------------------------------
+ */
 new Vue({
     el: '#categoryApp',
 
@@ -59,7 +76,7 @@ new Vue({
             }
 
             // Create as root form
-            if(rootOnly && action === 'create' && this.selectedNode) {
+            if (rootOnly && action === 'create' && this.selectedNode) {
                 return false;
             }
 
@@ -87,24 +104,39 @@ new Vue({
             self.categoryFormAction = 'edit';
         });
 
-        this.$on('jsTree.orderChanged', treeJson => {
-            axios.post(window.categoryModule.routes.order, treeJson).catch(err => {
-                $.growl.error({message: 'Unable to save order - server error!'});
-                console.log(err.response);
-            });
+        this.$on('jsTree.orderChanged', data => {
+            this.__categoryApp__blockPanel();
+
+            axios
+                .post(window.categoryModule.routes.order, data)
+                .then(() => {
+                    this.__categoryApp__unblockPanel();
+                })
+                .catch(() => {
+                    $.growl.error({
+                        message: 'Unable to save order - server error!'
+                    });
+                });
         });
     },
 
     methods: {
         __categoryApp__loadCategories() {
             let self = this;
+            this.__categoryApp__blockPanel();
 
-            axios.get(window.categoryModule.routes.index).then(res => {
-                self.categories = _.keyBy(res.data, 'id');
-                self.$emit('jsTree.categoriesLoaded', res.data);
-            }).catch(() => {
-                alert('Unable to load categories - server error!');
-            });
+            axios
+                .get(window.categoryModule.routes.index)
+                .then(res => {
+                    self.categories = _.keyBy(res.data, 'id');
+                    self.$emit('jsTree.categoriesLoaded', res.data);
+                })
+                .catch(() => {
+                    alert('Unable to load categories - server error!');
+                })
+                .then(() => {
+                    self.__categoryApp__unblockPanel();
+                });
         },
 
         /**
@@ -128,9 +160,8 @@ new Vue({
         /**
          * Save category
          */
-        __categoryApp__saveCategory(event) {
-            const button = $(event.target);
-            button.data('loading-text', '<i class="fa fa-spin fa-spinner"></i>').button('loading');
+        __categoryApp__saveCategory() {
+            this.__categoryApp__blockPanel();
 
             let route, method;
 
@@ -151,12 +182,10 @@ new Vue({
 
             axios
                 .post(route, data)
-                .then(res => {
+                .then(() => {
                     $.growl.success({message: 'Category saved!'});
                     self.__categoryApp__loadCategories();
-                    button.button('reset');
                 })
-
                 .catch(err => {
                     if (err.response.status !== 422) {
                         $.growl.error({message: 'Unknown server error!'});
@@ -170,8 +199,6 @@ new Vue({
 
                         $.growl.error({message: error});
                     }
-
-                    button.button('reset');
                 });
         },
 
@@ -179,14 +206,15 @@ new Vue({
             let self = this;
 
             swal({
-                title: "Are you sure?",
-                text: "Category and all subcategories will be deleted!",
-                type: "warning",
+                title: 'Are you sure?',
+                text: 'Category and all subcategories will be deleted!',
+                type: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: "#DD6B55",
-                confirmButtonText: "Delete!"
+                confirmButtonColor: '#DD6B55',
+                confirmButtonText: 'Delete!'
             }).then(function () {
                 let route = window.categoryModule.routes.update.replace('--ID--', self.selectedNode.id);
+                self.__categoryApp__blockPanel();
 
                 $.post(route, {_method: 'DELETE'}).done(() => {
                     self.__categoryApp__loadCategories();
@@ -197,16 +225,31 @@ new Vue({
                     self.selectedNode = null;
 
                     setTimeout(() => {
-                        swal("Success", "Category successfully deleted!", "success");
+                        swal('Success', 'Category successfully deleted!', 'success');
                     }, 300);
                 }).fail(() => {
                     setTimeout(() => {
-                        swal("Whoops..", "Unable to delete category - server error!", "error");
+                        swal('Whoops..', 'Unable to delete category - server error!', 'error');
                     }, 300);
                 });
-            }).catch(() => {
             });
         },
+
+        __categoryApp__blockPanel() {
+            $(this.$el).block({
+                message: 'Processing...',
+                css: {
+                    border: '1px solid #000',
+                    background: 'rgba(0,0,0,0.5)',
+                    color: '#fff',
+                    padding: '15px'
+                }
+            });
+        },
+
+        __categoryApp__unblockPanel() {
+            $(this.$el).unblock();
+        }
     },
 
     components: {

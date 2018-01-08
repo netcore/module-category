@@ -130,12 +130,16 @@ class CategoryController extends Controller
     public function updateOrder(Request $request)
     {
         Category::rebuildTree(
-            $request->all()
+            $request->input('tree')
         );
 
         $this->clearCache();
 
-        dispatch(new RegenerateCategoryFullSlugs);
+        $movedNode = Category::findOrFail(
+            $request->input('moved')
+        );
+
+        dispatch(new RegenerateCategoryFullSlugs($movedNode));
 
         return response()->json([
             'state' => 'success',

@@ -23,6 +23,7 @@
     </script>
 
     <script src="{{ asset('assets/category/admin/js/jstree.js') }}"></script>
+    <script src="{{ asset('assets/category/admin/js/block-ui.js') }}"></script>
     <script src="{{ versionedAsset('assets/category/admin/js/categories.js') }}"></script>
 @endsection
 

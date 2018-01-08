@@ -34,7 +34,10 @@
                     no_a_attr: true
                 });
 
-                self.$parent.$emit('jsTree.orderChanged', self.buildTreeDataForNestedSet(treeJson));
+                self.$parent.$emit('jsTree.orderChanged', {
+                    tree: self.buildTreeDataForNestedSet(treeJson),
+                    moved: data.node.id
+                });
             });
 
             // Deselect current selection
