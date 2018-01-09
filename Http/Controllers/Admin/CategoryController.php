@@ -2,6 +2,7 @@
 
 namespace Modules\Category\Http\Controllers\Admin;
 
+use Exception;
 use Illuminate\Cache\RedisStore;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -69,6 +70,10 @@ class CategoryController extends Controller
             $parent->appendNode($category);
         }
 
+        dispatch(
+            new RegenerateCategoryFullSlugs($category)
+        );
+
         $this->clearCache();
 
         return response()->json([
@@ -91,6 +96,10 @@ class CategoryController extends Controller
 
         $category->updateTranslations(
             $request->input('translations')
+        );
+
+        dispatch(
+            new RegenerateCategoryFullSlugs($category)
         );
 
         $this->clearCache();
@@ -139,7 +148,9 @@ class CategoryController extends Controller
             $request->input('moved')
         );
 
-        dispatch(new RegenerateCategoryFullSlugs($movedNode));
+        dispatch(
+            new RegenerateCategoryFullSlugs($movedNode)
+        );
 
         return response()->json([
             'state' => 'success',
@@ -156,7 +167,10 @@ class CategoryController extends Controller
         $isTreeOpened = config('netcore.module-category.tree.opened_by_default', false);
         $suffixHelper = config('netcore.module-category.tree.name_suffix_helper_function', null);
 
-        $categories = Category::defaultOrder()->get()->map(function (Category $category) use ($isTreeOpened, $suffixHelper) {
+        $categories = Category::defaultOrder()->get()->map(function (Category $category) use (
+            $isTreeOpened,
+            $suffixHelper
+        ) {
             $categoryName = trans_model($category, TransHelper::getLanguage(), 'name');
 
             if ($suffixHelper && function_exists($suffixHelper)) {
@@ -183,19 +197,23 @@ class CategoryController extends Controller
     }
 
     /**
-     * Clear cache by tag
+     * Clear cache.
      *
      * @return void
      */
-    private function clearCache() : void
+    private function clearCache(): void
     {
-        $cacheTag = config('netcore.module-category.cache_tag');
-        $isRedis = cache()->getStore() instanceof RedisStore;
+        try {
+            $cacheTag = config('netcore.module-category.cache_tag');
+            $isRedis = cache()->getStore() instanceof RedisStore;
 
-        if ($cacheTag && $isRedis) {
-            cache()->tags([$cacheTag])->flush();
-        }  else {
-            cache()->flush();
+            if ($cacheTag && $isRedis) {
+                cache()->tags([$cacheTag])->flush();
+            } else {
+                cache()->flush();
+            }
+        } catch (Exception $exception) {
+            logger()->error('[module-category] Unable to clear cache: ' . $exception->getMessage());
         }
     }
 }
