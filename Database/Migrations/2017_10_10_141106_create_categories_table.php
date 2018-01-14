@@ -16,13 +16,44 @@ class CreateCategoriesTable extends Migration
     {
         Schema::create('netcore_category__categories', function (Blueprint $table) {
             $table->increments('id');
+            $table->unsignedInteger('category_group_id');
 
-            // NestedSet left, right and parent_id columns
+            // Nested set columns.
             NestedSet::columns($table);
 
+            // Simple icon. (select2)
             $table->string('icon')->nullable();
+
+            // Stapler fields. (image icon)
+            $table->string('file_icon_file_name')->nullable();
+            $table->integer('file_icon_file_size')->nullable();
+            $table->string('file_icon_content_type')->nullable();
+            $table->timestamp('file_icon_updated_at')->nullable();
+
             $table->timestamps();
             $table->softDeletes();
+
+            $table->foreign('category_group_id', 'category_category_group_foreign')
+                  ->references('id')
+                  ->on('netcore_category__category_groups')
+                  ->onDelete('CASCADE');
+        });
+
+        Schema::create('netcore_category__category_translations', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('category_id');
+            $table->string('locale', 2)->index();
+            $table->string('name');
+            $table->string('slug')->index()->unique();
+            $table->string('full_slug')->nullable()->index();
+
+            $table->timestamps();
+
+            $table->unique(['category_id', 'locale'], 'category_locale_unique');
+            $table->foreign('category_id', 'category_translation_category_foreign')
+                  ->references('id')
+                  ->on('netcore_category__categories')
+                  ->onDelete('CASCADE');
         });
     }
 
@@ -33,6 +64,7 @@ class CreateCategoriesTable extends Migration
      */
     public function down()
     {
-        // It is dropped in "netcore_category__category_translations" migration
+        Schema::dropIfExists('netcore_category__category_translations');
+        Schema::dropIfExists('netcore_category__categories');
     }
 }

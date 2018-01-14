@@ -17,6 +17,5 @@ class CategoryDatabaseSeeder extends Seeder
         Model::unguard();
 
         $this->call(MenuTableSeeder::class);
-        $this->call(CategoriesTableSeeder::class);
     }
 }

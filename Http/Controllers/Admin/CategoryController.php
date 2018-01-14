@@ -5,75 +5,66 @@ namespace Modules\Category\Http\Controllers\Admin;
 use Cviebrock\EloquentSluggable\Services\SlugService;
 use Exception;
 use Illuminate\Cache\RedisStore;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 
+use Illuminate\Support\Collection;
 use Modules\Category\Icons\IconSet;
 use Modules\Category\Jobs\RegenerateCategoryFullSlugs;
 use Modules\Category\Models\Category;
 use Modules\Category\Http\Requests\CategoryRequest;
 
+use Modules\Category\Models\CategoryGroup;
+use Modules\Category\Traits\ControllerHelpersTrait;
 use Modules\Category\Translations\CategoryTranslation;
 use Netcore\Translator\Helpers\TransHelper;
 
 class CategoryController extends Controller
 {
+    use ControllerHelpersTrait;
+
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse|\Illuminate\Support\Collection
+     * @return \Illuminate\View\View
      */
     public function index()
     {
-        if (request()->wantsJson()) {
-            return $this->getCategoriesTreeJson();
+        $categoryGroups = CategoryGroup::all();
+        $selectedGroupId = request()->get('group', optional($categoryGroups->first())->id);
+
+        if (!$categoryGroups->pluck('id')->contains($selectedGroupId)) {
+            abort(404);
         }
 
-        $icons = [
-            'enabled'   => config('netcore.module-category.icons.enabled', false),
-            'root_only' => config('netcore.module-category.icons.rootOnly', true),
-        ];
+        $categoryGroup = $categoryGroups->where('id', $selectedGroupId)->first();
+        $languages = TransHelper::getAllLanguages();
 
-        if ($icons['enabled']) {
-            $icons['set'] = app('CategoryIconSet')->getIcons();
-            $icons['template'] = app('CategoryIconSet')->getSelect2Template();
-        }
-
-        $jsVars = collect([
-            'icons'     => $icons,
-            'languages' => TransHelper::getAllLanguages(),
-            'routes'    => [
-                'index'  => route('category::categories.index'),
-                'update' => route('category::categories.update', '--ID--'),
-                'order'  => route('category::categories.order'),
-            ],
-        ]);
-
-        return view('category::index', compact('jsVars'));
+        return view('category::index', compact('categoryGroups', 'categoryGroup', 'languages'));
     }
 
     /**
-     * Store category
+     * Store category.
      *
+     * @param CategoryGroup $categoryGroup
      * @param CategoryRequest $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function store(CategoryRequest $request)
+    public function store(CategoryGroup $categoryGroup, CategoryRequest $request)
     {
-        $category = Category::create(
-            $request->only('icon')
+        $category = $categoryGroup->categories()->create(
+            $request->only(['icon', 'file_icon'])
         );
 
-        $this->modifySlugs(
-            $category,
-            $request
-        );
+        $this->modifySlugs($request);
 
         $category->storeTranslations(
             $request->input('translations')
         );
 
-        if ($request->has('parent') && $parent = Category::find($request->input('parent'))) {
+        if ($request->has('parent_id') && $parent = Category::find($request->input('parent_id'))) {
             $parent->appendNode($category);
         }
 
@@ -89,22 +80,24 @@ class CategoryController extends Controller
     }
 
     /**
-     * Update category
+     * Update category.
      *
      * @param CategoryRequest $request
+     * @param CategoryGroup $categoryGroup
      * @param Category $category
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function update(CategoryRequest $request, Category $category)
+    public function update(CategoryRequest $request, CategoryGroup $categoryGroup, Category $category)
     {
-        $category->update([
-            'icon' => $request->input('icon'),
-        ]);
-
-        $this->modifySlugs(
-            $category,
-            $request
+        $category = $categoryGroup->categories()->findOrFail(
+            $category->id
         );
+
+        $category->update(
+            $request->only(['icon', 'file_icon'])
+        );
+
+        $this->modifySlugs($request);
 
         $category->updateTranslations(
             $request->input('translations')
@@ -122,14 +115,15 @@ class CategoryController extends Controller
     }
 
     /**
-     * Delete category and it's descendants
+     * Delete category and it's descendants.
      *
+     * @param CategoryGroup $categoryGroup
      * @param Category $category
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function destroy(Category $category)
+    public function destroy(CategoryGroup $categoryGroup, Category $category)
     {
-        $categories = Category::descendantsAndSelf($category->id);
+        $categories = $categoryGroup->categories()->descendantsAndSelf($category->id);
 
         foreach ($categories as $item) {
             $item->delete();
@@ -146,7 +140,7 @@ class CategoryController extends Controller
      * Rebuild categories tree
      *
      * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function updateOrder(Request $request)
     {
@@ -170,20 +164,21 @@ class CategoryController extends Controller
     }
 
     /**
-     * Get data for JsTree
+     * Get data for JsTree.
      *
+     * @param CategoryGroup $categoryGroup
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    private function getCategoriesTreeJson()
+    public function fetchCategories(CategoryGroup $categoryGroup)
     {
         $isTreeOpened = config('netcore.module-category.tree.opened_by_default', false);
         $suffixHelper = config('netcore.module-category.tree.name_suffix_helper_function', null);
+        $language = TransHelper::getLanguage();
 
-        $categories = Category::defaultOrder()->get()->map(function (Category $category) use (
-            $isTreeOpened,
-            $suffixHelper
-        ) {
-            $categoryName = trans_model($category, TransHelper::getLanguage(), 'name');
+        $categories = $categoryGroup->categories()->defaultOrder()->get();
+
+        $categories = $categories->map(function (Category $category) use ($isTreeOpened, $suffixHelper, $language) {
+            $categoryName = trans_model($category, $language, 'name');
 
             if ($suffixHelper && function_exists($suffixHelper)) {
                 $categoryName .= $suffixHelper($category);
@@ -206,59 +201,5 @@ class CategoryController extends Controller
         });
 
         return $categories;
-    }
-
-    /**
-     * Clear cache.
-     *
-     * @return void
-     */
-    private function clearCache(): void
-    {
-        try {
-            $cacheTag = config('netcore.module-category.cache_tag');
-            $isRedis = cache()->getStore() instanceof RedisStore;
-
-            if ($cacheTag && $isRedis) {
-                cache()->tags([$cacheTag])->flush();
-            } else {
-                cache()->flush();
-            }
-        } catch (Exception $exception) {
-            logger()->error('[module-category] Unable to clear cache: ' . $exception->getMessage());
-        }
-    }
-
-    /**
-     * Check and modify custom slug.
-     *
-     * @param Category $category
-     * @param Request $request
-     */
-    private function modifySlugs(Category $category, Request &$request): void
-    {
-        $translations = $request->input('translations', []);
-        $existingSlugs = [];
-        $i = 1;
-
-        foreach ($translations as $iso => $translationData) {
-            // Auto generated
-            if(!$slug = array_get($translationData, 'slug')) {
-                continue;
-            }
-
-            $slug = SlugService::createSlug(CategoryTranslation::class, 'slug', $slug, ['unique' => false]);
-
-            // Prevent equal slug's on create.
-            if (in_array($slug, $existingSlugs)) {
-                $slug .= '-' . $i;
-                $i++;
-            }
-
-            $translations[$iso]['slug'] = $slug;
-            $existingSlugs[] = $slug;
-        }
-
-        $request->merge(compact('translations'));
     }
 }
