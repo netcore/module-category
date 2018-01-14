@@ -34,33 +34,36 @@ This module is part of Netcore CMS ecosystem and is only functional in a project
 
  - Configuration file is available at config/netcore/module-category.php
 
+### Category groups
+
+- Category groups are not editable from admin control panel. You should seed them.
+```php 
+    // DatabaseSeeder.php:
+    
+    // For select2 type, you should create presenter first, read below about presenters.
+    CategoryGroup::create([
+        'key'                   => 'advertisment',
+        'title'                 => 'Advertisement categories', 
+        'has_icons'             => true,
+        'icons_for_only_roots'  => true,
+        'icons_type'            => 'select2',
+        'icons_presenter_class' => \App\Icons\ClassifiedIconsPresenter::class,
+        'levels'                => 3, 
+    ]);
+
+    CategoryGroup::create([
+        'key'                  => 'forum',
+        'title'                => 'Forum categories',
+        'has_icons'            => true,
+        'icons_for_only_roots' => true,
+        'icons_type'           => 'file',
+        'levels'               => null, // no limit
+    ]);
+```
+
 #### Icon set
 
-- To use "FontAwesome" icon set, set config to
-```php
-    return [
-        'icons' => [
-            ...
-            'presenter' => \Modules\Category\Icons\FontAwesomeIconSet::class,
-            ...
-        ]
-        ...
-    ];
-```
-
-- To use "Ionicons" icon set, set config to
-```php
-    return [
-        'icons' => [
-            ...
-            'presenter' => \Modules\Category\Icons\IonIconSet::class,
-            ...
-        ]
-        ...
-    ];
-```
-
-- Also you can create your own icon presenter class. It should implement \Modules\Category\Icons\IconSetInterface
+- Create icons presenter. It should implement \Modules\Category\Icons\IconSetInterface
 ```php
     use Modules\Category\Icons\IconSetInterface;
 
