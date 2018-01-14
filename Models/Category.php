@@ -2,6 +2,8 @@
 
 namespace Modules\Category\Models;
 
+use Codesleeve\Stapler\ORM\EloquentTrait;
+use Codesleeve\Stapler\ORM\StaplerableInterface;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -9,6 +11,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Kalnoy\Nestedset\NodeTrait;
 use Dimsav\Translatable\Translatable;
 
+use Modules\Admin\Traits\BootStapler;
+use Modules\Admin\Traits\StaplerAndTranslatable;
 use Modules\Admin\Traits\SyncTranslations;
 use Modules\Category\Translations\CategoryTranslation;
 
@@ -25,12 +29,14 @@ use Modules\Category\Translations\CategoryTranslation;
  * @property int|null $file_icon_file_size
  * @property string|null $file_icon_content_type
  * @property string|null $file_icon_updated_at
+ * @property int $items_count
  * @property \Carbon\Carbon|null $created_at
  * @property \Carbon\Carbon|null $updated_at
  * @property string|null $deleted_at
  * @property-read \Kalnoy\Nestedset\Collection|\Modules\Category\Models\Category[] $children
  * @property-read array $breadcrumb_links
  * @property-read string $chained_name
+ * @property-read string|null $file_icon_link
  * @property-read \Modules\Category\Models\CategoryGroup $group
  * @property-read \Modules\Category\Models\Category|null $parent
  * @property-read \Illuminate\Database\Eloquent\Collection|\Modules\Category\Translations\CategoryTranslation[] $translations
@@ -53,6 +59,7 @@ use Modules\Category\Translations\CategoryTranslation;
  * @method static \Illuminate\Database\Eloquent\Builder|\Modules\Category\Models\Category whereFileIconUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\Modules\Category\Models\Category whereIcon($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\Modules\Category\Models\Category whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\Modules\Category\Models\Category whereItemsCount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\Modules\Category\Models\Category whereLft($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\Modules\Category\Models\Category whereParentId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\Modules\Category\Models\Category whereRgt($value)
@@ -64,9 +71,28 @@ use Modules\Category\Translations\CategoryTranslation;
  * @method static \Illuminate\Database\Query\Builder|\Modules\Category\Models\Category withoutTrashed()
  * @mixin \Eloquent
  */
-class Category extends Model
+class Category extends Model implements StaplerableInterface
 {
-    use NodeTrait, SoftDeletes, Translatable, SyncTranslations;
+    use NodeTrait,
+        SoftDeletes,
+        SyncTranslations,
+        StaplerAndTranslatable,
+        BootStapler;
+
+    /**
+     * Stapler and Translatable traits conflict with each other
+     * That's why we have created custom trait to resolve this conflict
+     */
+    use Translatable {
+        StaplerAndTranslatable::getAttribute insteadof Translatable;
+        StaplerAndTranslatable::setAttribute insteadof Translatable;
+    }
+
+    use EloquentTrait {
+        StaplerAndTranslatable::getAttribute insteadof EloquentTrait;
+        StaplerAndTranslatable::setAttribute insteadof EloquentTrait;
+        BootStapler::boot insteadof EloquentTrait;
+    }
 
     /**
      * The table associated with the model.
@@ -82,7 +108,8 @@ class Category extends Model
      */
     protected $fillable = [
         'icon',
-        'classified_count',
+        'file_icon',
+        'items_count',
     ];
 
     /**
@@ -104,12 +131,32 @@ class Category extends Model
     public $translationModel = CategoryTranslation::class;
 
     /**
+     * Stapler configuration for file icon.
+     *
+     * @var array
+     */
+    protected $staplerConfig = [
+        'file_icon' => [
+            'url' => '/uploads/:class/:attachment/:id_partition/:style/:filename',
+        ],
+    ];
+
+    /**
      * The relations to eager load on every query.
      *
      * @var array
      */
     protected $with = [
         'translations',
+    ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'file_icon_link',
     ];
 
     /** --------------- Accessors --------------- */
@@ -149,6 +196,16 @@ class Category extends Model
         $breadcrumbs[url($this->full_slug)] = $this->name;
 
         return $breadcrumbs;
+    }
+
+    /**
+     * Get the link to file icon.
+     *
+     * @return string|null
+     */
+    public function getFileIconLinkAttribute(): ?string
+    {
+        return $this->file_icon_content_type ? url($this->file_icon->url()) : null;
     }
 
     /** --------------- Relations --------------- */

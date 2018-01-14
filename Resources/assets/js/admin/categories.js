@@ -5,14 +5,22 @@ import axios from 'axios';
 import EventBus from './event-bus';
 
 new Vue({
+    /**
+     * Element to bind the app.
+     */
     el: '#categoryApp',
 
+    /**
+     * Define components.
+     */
     components: {
         'categories-tree': require('./components/CategoriesTree.vue'),
-        'categories-form': require('./components/CategoriesForm.vue'),
-        'icon-select': require('./components/IconSelect.vue')
+        'categories-form': require('./components/CategoriesForm.vue')
     },
 
+    /**
+     * App data.
+     */
     data: {
         group: categoryModule.categoryGroup,
         routes: categoryModule.routes,
@@ -20,11 +28,17 @@ new Vue({
         categories: {}
     },
 
+    /**
+     * Created event.
+     */
     created() {
         this.setupEventListeners();
         this.loadCategories();
     },
 
+    /**
+     * Define methods.
+     */
     methods: {
         /**
          * Setup event listeners.

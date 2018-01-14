@@ -189,6 +189,7 @@ class CategoryController extends Controller
                 'parent'       => $category->parent_id ?: '#',
                 'text'         => $categoryName,
                 'icon'         => $category->icon,
+                'file_icon'    => $category->file_icon_link,
                 'li_attr'      => [],
                 'a_attr'       => [],
                 'translations' => $category->translations,

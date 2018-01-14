@@ -67,9 +67,10 @@
                 </div>
             </div>
 
-            <div class="form-group" v-if="false">
+            <div class="form-group" v-if="showIconBox">
                 <label for="icon">Icon:</label>
-                <icon-select id="icon" :icon="categoryForm.icon" v-if="group.icons_type === 'select2'"></icon-select>
+                <img :src="iconPreviewImage" alt="Preview" v-if="iconPreviewImage" class="preview-image">
+                <icon-select id="icon" :icon="categoryForm.icon" v-if="$parent.group.icons_type === 'select2'"></icon-select>
                 <input type="file" name="file_icon" class="form-control" id="icon" v-else>
             </div>
         </div>
@@ -90,10 +91,23 @@
     import FormMock from '../form-mock';
 
     export default {
+        /**
+         * Declare props.
+         */
         props: [
             'category'
         ],
 
+        /**
+         * Declare components.
+         */
+        components: {
+            'icon-select': require('./IconSelect.vue')
+        },
+
+        /**
+         * Component data.
+         */
         data() {
             return {
                 action: 'create',
@@ -267,7 +281,48 @@
                 }
 
                 return this.selectedNodeDepth < maxLevel;
+            },
+
+            /**
+             * Check if icon select box should be shown.
+             *
+             * @return {boolean}
+             */
+            showIconBox() {
+                let hasIcons = this.$parent.group.has_icons;
+                let rootOnly = this.$parent.group.icons_for_only_roots;
+
+                if (! hasIcons) {
+                    return false;
+                }
+
+                if (rootOnly && this.action === 'create' && this.selectedNode.id) {
+                    return false;
+                }
+
+                return !(rootOnly && this.action === 'edit' && this.selectedNode.parent !== '#');
+            },
+
+            /**
+             * Get the preview image link.
+             *
+             * @return {*}
+             */
+            iconPreviewImage() {
+                if (this.action === 'create') {
+                    return false;
+                }
+
+                return this.selectedNode.file_icon;
             }
         }
     };
 </script>
+
+<style lang="scss">
+    .preview-image {
+        display: block;
+        max-width: 150px;
+        margin: 10px 0;
+    }
+</style>

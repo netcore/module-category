@@ -30,6 +30,7 @@ class CreateCategoriesTable extends Migration
             $table->string('file_icon_content_type')->nullable();
             $table->timestamp('file_icon_updated_at')->nullable();
 
+            $table->unsignedInteger('items_count')->default(0);
             $table->timestamps();
             $table->softDeletes();
 
