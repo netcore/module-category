@@ -40,7 +40,7 @@ class CategoryRequest extends FormRequest
             }
 
             // Name
-            $rules["translations.{$iso}.name"] = 'required|min:3';
+            $rules["translations.{$iso}.name"] = 'required';
 
             // Slug
             $rules["translations.{$iso}.slug"][] = 'nullable';
@@ -59,7 +59,6 @@ class CategoryRequest extends FormRequest
     {
         return [
             'translations.*.name.required' => 'Category name :attribute is required.',
-            'translations.*.name.min' => 'Category name :attribute should be at least 3 chars.',
             'translations.*.slug.unique' => 'Category slug :attribute should be unique.'
         ];
     }
