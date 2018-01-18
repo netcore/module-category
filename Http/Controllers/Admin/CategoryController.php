@@ -2,7 +2,6 @@
 
 namespace Modules\Category\Http\Controllers\Admin;
 
-use Cviebrock\EloquentSluggable\Services\SlugService;
 use Exception;
 use Illuminate\Cache\RedisStore;
 use Illuminate\Http\Request;
@@ -13,7 +12,6 @@ use Modules\Category\Jobs\RegenerateCategoryFullSlugs;
 use Modules\Category\Models\Category;
 use Modules\Category\Http\Requests\CategoryRequest;
 
-use Modules\Category\Translations\CategoryTranslation;
 use Netcore\Translator\Helpers\TransHelper;
 
 class CategoryController extends Controller
@@ -64,11 +62,6 @@ class CategoryController extends Controller
             $request->only('icon')
         );
 
-        $this->modifySlugs(
-            $category,
-            $request
-        );
-
         $category->storeTranslations(
             $request->input('translations')
         );
@@ -100,11 +93,6 @@ class CategoryController extends Controller
         $category->update([
             'icon' => $request->input('icon'),
         ]);
-
-        $this->modifySlugs(
-            $category,
-            $request
-        );
 
         $category->updateTranslations(
             $request->input('translations')
@@ -227,38 +215,5 @@ class CategoryController extends Controller
         } catch (Exception $exception) {
             logger()->error('[module-category] Unable to clear cache: ' . $exception->getMessage());
         }
-    }
-
-    /**
-     * Check and modify custom slug.
-     *
-     * @param Category $category
-     * @param Request $request
-     */
-    private function modifySlugs(Category $category, Request &$request): void
-    {
-        $translations = $request->input('translations', []);
-        $existingSlugs = [];
-        $i = 1;
-
-        foreach ($translations as $iso => $translationData) {
-            // Auto generated
-            if(!$slug = array_get($translationData, 'slug')) {
-                continue;
-            }
-
-            $slug = SlugService::createSlug(CategoryTranslation::class, 'slug', $slug, ['unique' => false]);
-
-            // Prevent equal slug's on create.
-            if (in_array($slug, $existingSlugs)) {
-                $slug .= '-' . $i;
-                $i++;
-            }
-
-            $translations[$iso]['slug'] = $slug;
-            $existingSlugs[] = $slug;
-        }
-
-        $request->merge(compact('translations'));
     }
 }

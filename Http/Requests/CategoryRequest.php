@@ -13,7 +13,7 @@ class CategoryRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -23,15 +23,16 @@ class CategoryRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
+        $this->modifySlugs();
+
         $languages = TransHelper::getAllLanguages();
         $category = $this->route('category');
 
         $rules = [];
 
         foreach ($languages as $language) {
-
             $translationInstance = null;
             $iso = $language->iso_code;
 
@@ -39,10 +40,7 @@ class CategoryRequest extends FormRequest
                 $translationInstance = $category->translations()->where('locale', $language->iso_code)->first();
             }
 
-            // Name
             $rules["translations.{$iso}.name"] = 'required';
-
-            // Slug
             $rules["translations.{$iso}.slug"][] = 'nullable';
             $rules["translations.{$iso}.slug"][] = Rule::unique('netcore_category__category_translations', 'slug')->ignore(object_get($translationInstance, 'id'));
         }
@@ -55,7 +53,7 @@ class CategoryRequest extends FormRequest
      *
      * @return array
      */
-    public function messages()
+    public function messages(): array
     {
         return [
             'translations.*.name.required' => 'Category name :attribute is required.',
@@ -68,7 +66,7 @@ class CategoryRequest extends FormRequest
      *
      * @return array
      */
-    public function attributes()
+    public function attributes(): array
     {
         $languages = TransHelper::getAllLanguages();
         $translatedAttributes = ['name', 'slug'];
@@ -93,5 +91,23 @@ class CategoryRequest extends FormRequest
         }
 
         return $attributes;
+    }
+
+    /**
+     * Modify custom slugs.
+     *
+     * @return void
+     */
+    public function modifySlugs(): void
+    {
+        $data = $this->all();
+
+        foreach (array_get($data, 'translations', []) as $iso => $translationsData) {
+            if ($slug = array_get($translationsData, 'slug')) {
+                $data['translations'][$iso]['slug'] = str_slug($slug);
+            }
+        }
+
+        $this->merge($data);
     }
 }
