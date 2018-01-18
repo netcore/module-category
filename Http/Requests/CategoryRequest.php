@@ -19,14 +19,24 @@ class CategoryRequest extends FormRequest
     }
 
     /**
+     * Get data to be validated from the request.
+     *
+     * @return array
+     */
+    public function validationData(): array
+    {
+        $this->modifySlugs();
+
+        return $this->all();
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array
      */
     public function rules(): array
     {
-        $this->modifySlugs();
-
         $languages = TransHelper::getAllLanguages();
         $category = $this->route('category');
 
@@ -36,13 +46,15 @@ class CategoryRequest extends FormRequest
             $translationInstance = null;
             $iso = $language->iso_code;
 
+            $uniqueRule = Rule::unique('netcore_category__category_translations', 'slug');
+
             if ($category) {
                 $translationInstance = $category->translations()->where('locale', $language->iso_code)->first();
+                $uniqueRule->ignore($translationInstance->id);
             }
 
             $rules["translations.{$iso}.name"] = 'required';
-            $rules["translations.{$iso}.slug"][] = 'nullable';
-            $rules["translations.{$iso}.slug"][] = Rule::unique('netcore_category__category_translations', 'slug')->ignore(object_get($translationInstance, 'id'));
+            $rules["translations.{$iso}.slug"] = ['nullable', $uniqueRule];
         }
 
         return $rules;
@@ -57,7 +69,7 @@ class CategoryRequest extends FormRequest
     {
         return [
             'translations.*.name.required' => 'Category name :attribute is required.',
-            'translations.*.slug.unique' => 'Category slug :attribute should be unique.'
+            'translations.*.slug.unique'   => 'Category slug :attribute should be unique.',
         ];
     }
 
