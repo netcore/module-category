@@ -1,23 +1,6 @@
 <?php
 
 return [
-    'icons'     => [
-        /**
-         * Enable/disable category icons
-         */
-        'enabled'   => true,
-
-        /**
-         * Only root categories have icons?
-         */
-        'root_only' => true,
-
-        /**
-         * Select2 icon presenter/formatter
-         */
-        'presenter' => \Modules\Category\Icons\FontAwesomeIconSet::class,
-    ],
-
     /**
      * Cache tag name.
      *

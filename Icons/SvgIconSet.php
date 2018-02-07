@@ -41,6 +41,7 @@ class SvgIconSet implements IconSetInterface
      * Get sprite to inject before container
      *
      * @return string
+     * @throws \Throwable
      */
     public function getInjectableSprite(): string
     {
