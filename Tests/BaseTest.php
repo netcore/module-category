@@ -24,7 +24,7 @@ class BaseTest extends TestCase
         $key = 'test_category';
         $title = 'Test category';
 
-        Category::where('key', $key)->delete();
+        CategoryGroup::where('key', $key)->delete();
 
         // @throws: PDO exception.
         for ($i = 0; $i <= 1; $i++) {
