@@ -1,8 +1,10 @@
 'use strict';
 
-import 'block-ui';
 import axios from 'axios';
 import EventBus from './event-bus';
+
+import CategoriesTree from './components/CategoriesTree';
+import CategoriesForm from './components/CategoriesForm';
 
 new Vue({
     /**
@@ -14,8 +16,8 @@ new Vue({
      * Define components.
      */
     components: {
-        'categories-tree': require('./components/CategoriesTree.vue'),
-        'categories-form': require('./components/CategoriesForm.vue')
+        CategoriesTree,
+        CategoriesForm
     },
 
     /**
@@ -25,15 +27,17 @@ new Vue({
         group: categoryModule.categoryGroup,
         routes: categoryModule.routes,
         languages: _.keyBy(categoryModule.languages, 'iso_code'),
-        categories: {}
+        categories: {},
+        isLoading: true
     },
 
     /**
      * Created event.
      */
-    created() {
+    async created() {
         this.setupEventListeners();
-        this.loadCategories();
+        await this.loadCategories();
+        this.unblockPanel();
     },
 
     /**
@@ -53,14 +57,13 @@ new Vue({
         /**
          * Load categories.
          */
-        loadCategories() {
-            return new Promise((resolve, reject) => {
-                axios.get(this.routes.fetch).then(({data: categories}) => {
-                    this.categories = categories;
-                    EventBus.$emit('jstree::set-categories', categories);
-                    resolve(categories);
-                }).catch(reject);
-            });
+        async loadCategories() {
+            let {data: categories} = await axios.get(this.routes.fetch);
+
+            this.categories = categories;
+            EventBus.$emit('jstree::set-categories', categories);
+
+            return categories;
         },
 
         /**
@@ -80,22 +83,14 @@ new Vue({
          * Block panel to disable any manipulations with categories while request in process.
          */
         blockPanel() {
-            $(this.$el).block({
-                message: 'Processing...',
-                css: {
-                    border: '1px solid #000',
-                    background: 'rgba(0,0,0,0.5)',
-                    color: '#fff',
-                    padding: '15px'
-                }
-            });
+            this.isLoading = true;
         },
 
         /**
          * Unblock panel and allow editing/ordering.
          */
         unblockPanel() {
-            $(this.$el).unblock();
+            this.isLoading = false;
         },
 
         /**
@@ -103,7 +98,7 @@ new Vue({
          */
         reloadAndUnblock() {
             this.loadCategories().then(() => {
-                this.unblockPanel();
+                this.isLoading = false;
             });
         }
     }

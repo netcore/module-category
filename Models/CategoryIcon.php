@@ -11,6 +11,46 @@ class CategoryIcon extends Model implements StaplerableInterface
     use EloquentTrait;
 
     /**
+     * The "booting" method of the model.
+     *
+     * @return void
+     */
+    public static function boot(): void
+    {
+        parent::boot();
+        static::bootStapler();
+
+        // Modify file name before saving.
+        static::saving(function (CategoryIcon $categoryIcon) {
+            if ($categoryIcon->isDirty('icon_file_name') && !is_null($categoryIcon->icon_file_name)) {
+                $pathInfo = pathinfo(
+                    $categoryIcon->icon->originalFileName()
+                );
+
+                if ($pathInfo && isset($pathInfo['extension'])) {
+                    $newFilename = md5(time()) . '.' . $pathInfo['extension'];
+                    $categoryIcon->icon->instanceWrite('file_name', $newFilename);
+                }
+            }
+        });
+    }
+
+    /**
+     * CategoryIcon constructor.
+     *
+     * @param array $attributes
+     * @return void
+     */
+    public function __construct(array $attributes = [])
+    {
+        $this->hasAttachedFile('icon', [
+            'url' => '/uploads/category_icons/:id_partition/:filename',
+        ]);
+
+        parent::__construct($attributes);
+    }
+
+    /**
      * The table associated with the model.
      *
      * @var string
@@ -28,17 +68,6 @@ class CategoryIcon extends Model implements StaplerableInterface
     ];
 
     /**
-     * Stapler configuration.
-     *
-     * @var array
-     */
-    protected $staplerConfig = [
-        'file' => [
-            'url' => '/uploads/category_icons/:id_partition/:filename',
-        ],
-    ];
-
-    /**
      * Indicates if the model should be timestamped.
      *
      * @var bool
@@ -46,27 +75,18 @@ class CategoryIcon extends Model implements StaplerableInterface
     public $timestamps = false;
 
     /**
-     * The "booting" method of the model.
+     * Overridden to prevent attempts to persist attachment attributes directly.
      *
-     * @return void
+     * Reason this is required: Laravel 5.5 changed the getDirty() behavior.
+     *
+     * {@inheritdoc}
      */
-    public static function boot(): void
+    protected function originalIsEquivalent($key, $current)
     {
-        parent::boot();
-        static::bootStapler();
+        if (array_key_exists($key, $this->attachedFiles)) {
+            return true;
+        }
 
-        // Modify file name before saving.
-        static::saving(function ($model) {
-            foreach ($model->staplerConfig as $name => $config) {
-                if ($model->isDirty($name . '_file_name') && !is_null($model->{$name . '_file_name'})) {
-                    $pathInfo = pathinfo($model->{$name}->originalFileName());
-
-                    if (isset($pathInfo['extension'])) {
-                        $newFilename = md5(time()) . '.' . $pathInfo['extension'];
-                        $model->{$name}->instanceWrite('file_name', $newFilename);
-                    }
-                }
-            }
-        });
+        return parent::originalIsEquivalent($key, $current);
     }
 }

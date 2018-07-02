@@ -2,23 +2,19 @@
 
 namespace Modules\Category\Http\Controllers\Admin;
 
-use Cviebrock\EloquentSluggable\Services\SlugService;
-use Exception;
-use Illuminate\Cache\RedisStore;
-use Illuminate\Http\JsonResponse;
+use Illuminate\View\View;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 
-use Illuminate\Support\Collection;
 use Modules\Category\Icons\IconSet;
-use Modules\Category\Jobs\RegenerateCategoryFullSlugs;
 use Modules\Category\Models\Category;
-use Modules\Category\Http\Requests\CategoryRequest;
-
 use Modules\Category\Models\CategoryGroup;
+use Modules\Category\Http\Requests\CategoryRequest;
+use Modules\Category\Models\CategoryIcon;
 use Modules\Category\Traits\ControllerHelpersTrait;
-use Modules\Category\Translations\CategoryTranslation;
+use Modules\Category\Jobs\RegenerateCategoryFullSlugs;
+
 use Netcore\Translator\Helpers\TransHelper;
 
 class CategoryController extends Controller
@@ -30,7 +26,7 @@ class CategoryController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function index()
+    public function index(): View
     {
         $categoryGroups = CategoryGroup::all();
         $selectedGroupId = request()->get('group', optional($categoryGroups->first())->id);
@@ -46,17 +42,26 @@ class CategoryController extends Controller
     }
 
     /**
-     * Store category.
+     * Store category in the database.
      *
-     * @param CategoryGroup $categoryGroup
-     * @param CategoryRequest $request
-     * @return JsonResponse
+     * @param \Modules\Category\Models\CategoryGroup $categoryGroup
+     * @param \Modules\Category\Http\Requests\CategoryRequest $request
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function store(CategoryGroup $categoryGroup, CategoryRequest $request)
+    public function store(CategoryGroup $categoryGroup, CategoryRequest $request): JsonResponse
     {
         $category = $categoryGroup->categories()->create(
-            $request->only(['icon', 'file_icon'])
+            $request->only('icon')
         );
+
+        foreach ($request->file('icons', []) as $key => $file) {
+            if ($categoryGroup->hasFileIcon($key) && $file) {
+                $category->icons()->create([
+                    'key'  => $key,
+                    'icon' => $file,
+                ]);
+            }
+        }
 
         $this->modifySlugs($request);
 
@@ -80,22 +85,31 @@ class CategoryController extends Controller
     }
 
     /**
-     * Update category.
+     * Update category in the database.
      *
-     * @param CategoryRequest $request
-     * @param CategoryGroup $categoryGroup
-     * @param Category $category
-     * @return JsonResponse
+     * @param \Modules\Category\Http\Requests\CategoryRequest $request
+     * @param \Modules\Category\Models\CategoryGroup $categoryGroup
+     * @param \Modules\Category\Models\Category $category
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function update(CategoryRequest $request, CategoryGroup $categoryGroup, Category $category)
+    public function update(CategoryRequest $request, CategoryGroup $categoryGroup, Category $category): JsonResponse
     {
-        $category = $categoryGroup->categories()->findOrFail(
-            $category->id
-        );
+        if ($category->category_group_id !== $categoryGroup->id) {
+            abort(404);
+        }
 
         $category->update(
-            $request->only(['icon', 'file_icon'])
+            $request->only('icon')
         );
+
+        foreach ($request->file('icons', []) as $key => $file) {
+            if ($categoryGroup->hasFileIcon($key) && $file) {
+                $category->icons()->updateOrCreate(
+                    ['key' => $key],
+                    ['icon' => $file]
+                );
+            }
+        }
 
         $this->modifySlugs($request);
 
@@ -117,13 +131,15 @@ class CategoryController extends Controller
     /**
      * Delete category and it's descendants.
      *
-     * @param CategoryGroup $categoryGroup
-     * @param Category $category
-     * @return JsonResponse
+     * @param \Modules\Category\Models\CategoryGroup $categoryGroup
+     * @param \Modules\Category\Models\Category $category
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy(CategoryGroup $categoryGroup, Category $category)
+    public function destroy(CategoryGroup $categoryGroup, Category $category): JsonResponse
     {
-        $categories = $categoryGroup->categories()->descendantsAndSelf($category->id);
+        $categories = $categoryGroup->categories()->descendantsAndSelf(
+            $category->id
+        );
 
         foreach ($categories as $item) {
             $item->delete();
@@ -137,12 +153,12 @@ class CategoryController extends Controller
     }
 
     /**
-     * Rebuild categories tree
+     * Rebuild categories tree.
      *
-     * @param Request $request
-     * @return JsonResponse
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function updateOrder(Request $request)
+    public function updateOrder(Request $request): JsonResponse
     {
         Category::rebuildTree(
             $request->input('tree')
@@ -177,11 +193,26 @@ class CategoryController extends Controller
 
         $categories = $categoryGroup->categories()->defaultOrder()->get();
 
-        $categories = $categories->map(function (Category $category) use ($isTreeOpened, $suffixHelper, $language) {
+        $categories = $categories->map(function (Category $category) use (
+            $isTreeOpened,
+            $suffixHelper,
+            $language,
+            $categoryGroup
+        ) {
+            // Name.
             $categoryName = trans_model($category, $language, 'name');
 
             if ($suffixHelper && function_exists($suffixHelper)) {
                 $categoryName .= $suffixHelper($category);
+            }
+
+            // Icons.
+            $icons = [];
+
+            if ($categoryGroup->has_icons) {
+                $icons = $category->icons->mapWithKeys(function (CategoryIcon $categoryIcon) {
+                    return [$categoryIcon->key => $categoryIcon->icon->url()];
+                });
             }
 
             return [
@@ -189,7 +220,6 @@ class CategoryController extends Controller
                 'parent'       => $category->parent_id ?: '#',
                 'text'         => $categoryName,
                 'icon'         => $category->icon,
-                'file_icon'    => $category->file_icon_link,
                 'li_attr'      => [],
                 'a_attr'       => [],
                 'translations' => $category->translations,
@@ -198,6 +228,7 @@ class CategoryController extends Controller
                     'disabled' => false,
                     'selected' => false,
                 ],
+                'icons'        => $icons,
             ];
         });
 

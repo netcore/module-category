@@ -4,6 +4,7 @@ namespace Modules\Category\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use Modules\Category\Icons\IconSetInterface;
 
 class CategoryGroup extends Model
@@ -91,5 +92,16 @@ class CategoryGroup extends Model
         }
 
         return $presenter = $this->hasPresenter() ? app($this->icons_presenter_class) : null;
+    }
+
+    /**
+     * Determine if category group has icon with given key.
+     *
+     * @param string $key
+     * @return bool
+     */
+    public function hasFileIcon(string $key): bool
+    {
+        return $this->file_icons instanceof Collection && $this->file_icons->has($key);
     }
 }

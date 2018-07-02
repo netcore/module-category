@@ -67,12 +67,20 @@
                 </div>
             </div>
 
-            <div class="form-group" v-if="showIconBox">
-                <label for="icon">Icon:</label>
-                <img :src="iconPreviewImage" alt="Preview" v-if="iconPreviewImage" class="preview-image">
-                <icon-select id="icon" :icon="categoryForm.icon" v-if="$parent.group.icons_type === 'select2'"></icon-select>
-                <input type="file" name="file_icon" class="form-control" id="icon" v-else>
-            </div>
+            <template v-if="showIconBox && isSelect2">
+                <div class="form-group">
+                    <label for="icon">Icon:</label>
+                    <icon-select id="icon" :icon="categoryForm.icon" />
+                </div>
+            </template>
+
+            <template v-if="showIconBox && !isSelect2">
+                <div class="form-group" v-for="(name, key) in $parent.group.file_icons">
+                    <label :for="`icon-${key}`">{{ name }}</label>
+                    <img :src="getIcon(key)" alt="Preview" v-if="getIcon(key)" class="preview-image">
+                    <input type="file" :name="`icons[${key}]`" class="form-control" :id="`icon-${key}`">
+                </div>
+            </template>
         </div>
 
         <div class="panel-footer text-right">
@@ -89,6 +97,7 @@
     import axios from 'axios';
     import EventBus from '../event-bus';
     import FormMock from '../form-mock';
+    import IconSelect from './IconSelect';
 
     export default {
         /**
@@ -102,7 +111,7 @@
          * Declare components.
          */
         components: {
-            'icon-select': require('./IconSelect.vue')
+            IconSelect
         },
 
         /**
@@ -243,7 +252,14 @@
                     title: 'Validation error!',
                     message: data.errors[Object.keys(data.errors)[0]][0]
                 });
-            }
+            },
+
+            /**
+             * Get icon of given key.
+             */
+            getIcon(key) {
+                return _.get(this.selectedNode, `icons.${key}`);
+            },
         },
 
         /**
@@ -301,6 +317,10 @@
                 }
 
                 return !(rootOnly && this.action === 'edit' && this.selectedNode.parent !== '#');
+            },
+
+            isSelect2() {
+                return this.$parent.group.icons_type === 'select2';
             },
 
             /**
