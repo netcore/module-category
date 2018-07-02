@@ -68,7 +68,7 @@
     </ul>
 
     <div class="panel b-t-0" id="categoryApp" v-cloak>
-        <div class="panel-body">
+        <div class="panel-body" :class="{'form-loading': isLoading}">
             <div class="row">
                 <div class="col-md-6">
                     <categories-tree></categories-tree>

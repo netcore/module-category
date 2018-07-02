@@ -2,9 +2,9 @@
 
 namespace Modules\Category\Http\Requests;
 
+use Illuminate\Validation\Rule;
 use Netcore\Translator\Helpers\TransHelper;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class CategoryRequest extends FormRequest
 {
@@ -13,9 +13,9 @@ class CategoryRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
-        return true;
+        return auth()->check() && auth()->user()->is_admin;
     }
 
     /**
@@ -23,12 +23,14 @@ class CategoryRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         $languages = TransHelper::getAllLanguages();
         $category = $this->route('category');
 
-        $rules = [];
+        $rules = [
+            'icons.*' => 'image|max:4096',
+        ];
 
         foreach ($languages as $language) {
 
@@ -43,8 +45,12 @@ class CategoryRequest extends FormRequest
             $rules["translations.{$iso}.name"] = 'required';
 
             // Slug
+            $uniqueSlug = Rule::unique('netcore_category__category_translations', 'slug')->ignore(
+                object_get($translationInstance, 'id')
+            );
+
             $rules["translations.{$iso}.slug"][] = 'nullable';
-            $rules["translations.{$iso}.slug"][] = Rule::unique('netcore_category__category_translations', 'slug')->ignore(object_get($translationInstance, 'id'));
+            $rules["translations.{$iso}.slug"][] = $uniqueSlug;
         }
 
         return $rules;
@@ -55,11 +61,11 @@ class CategoryRequest extends FormRequest
      *
      * @return array
      */
-    public function messages()
+    public function messages(): array
     {
         return [
             'translations.*.name.required' => 'Category name :attribute is required.',
-            'translations.*.slug.unique' => 'Category slug :attribute should be unique.'
+            'translations.*.slug.unique'   => 'Category slug :attribute should be unique.',
         ];
     }
 
@@ -68,7 +74,7 @@ class CategoryRequest extends FormRequest
      *
      * @return array
      */
-    public function attributes()
+    public function attributes(): array
     {
         $languages = TransHelper::getAllLanguages();
         $translatedAttributes = ['name', 'slug'];
@@ -88,7 +94,8 @@ class CategoryRequest extends FormRequest
 
         foreach ($translatedAttributes as $translatedAttribute) {
             foreach ($languages as $language) {
-                $attributes["translations.{$language->iso_code}.{$translatedAttribute}"] = str_replace(':lang', $language->title_localized, $placeholder);
+                $replaced = str_replace(':lang', $language->title_localized, $placeholder);
+                $attributes["translations.{$language->iso_code}.{$translatedAttribute}"] = $replaced;
             }
         }
 
