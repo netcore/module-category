@@ -22,6 +22,7 @@ class CreateCategoryGroupsTable extends Migration
             $table->enum('icons_type', ['select2', 'file'])->default('select2');
             $table->string('icons_presenter_class')->nullable();
             $table->unsignedInteger('levels')->nullable();
+            $table->text('file_icons')->nullable();
             $table->timestamps();
         });
     }

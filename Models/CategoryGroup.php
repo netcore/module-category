@@ -6,32 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Category\Icons\IconSetInterface;
 
-/**
- * Modules\Category\Models\CategoryGroup
- *
- * @property int $id
- * @property string $key
- * @property string $title
- * @property int $has_icons
- * @property int $icons_for_only_roots
- * @property string $icons_type
- * @property string|null $icons_presenter_class
- * @property int|null $levels
- * @property \Carbon\Carbon|null $created_at
- * @property \Carbon\Carbon|null $updated_at
- * @property-read \Kalnoy\Nestedset\Collection|\Modules\Category\Models\Category[] $categories
- * @method static \Illuminate\Database\Eloquent\Builder|\Modules\Category\Models\CategoryGroup whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\Modules\Category\Models\CategoryGroup whereHasIcons($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\Modules\Category\Models\CategoryGroup whereIconsForOnlyRoots($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\Modules\Category\Models\CategoryGroup whereIconsPresenterClass($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\Modules\Category\Models\CategoryGroup whereIconsType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\Modules\Category\Models\CategoryGroup whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\Modules\Category\Models\CategoryGroup whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\Modules\Category\Models\CategoryGroup whereLevels($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\Modules\Category\Models\CategoryGroup whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\Modules\Category\Models\CategoryGroup whereUpdatedAt($value)
- * @mixin \Eloquent
- */
 class CategoryGroup extends Model
 {
     /**
@@ -54,6 +28,16 @@ class CategoryGroup extends Model
         'icons_type',
         'icons_presenter_class',
         'levels',
+        'file_icons',
+    ];
+
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'file_icons' => 'collection',
     ];
 
     /** -------------------- Relations -------------------- */
